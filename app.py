@@ -1,0 +1,327 @@
+"""Flask application entry point for the task management board."""
+
+import logging
+from pathlib import Path
+
+from flask import Flask, jsonify, render_template, request
+
+from src import config
+from src.database_orm import Project, Ticket
+from src.db import get_session
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
+
+# Get the project root directory
+PROJECT_ROOT = Path(__file__).parent
+
+app = Flask(
+    __name__,
+    template_folder=str(PROJECT_ROOT / "templates"),
+    static_folder=str(PROJECT_ROOT / "static"),
+)
+app.secret_key = config.SECRET_KEY
+
+
+def get_project_color(project_id: int) -> str:
+    """Generate a consistent color for a project based on its ID."""
+    # Color palette for projects (dark mode friendly)
+    colors = [
+        "#0a84ff",  # blue
+        "#30d158",  # green
+        "#ff9f0a",  # orange
+        "#ff453a",  # red
+        "#bf5af2",  # purple
+        "#5e5ce6",  # indigo
+        "#ff375f",  # pink
+        "#64d2ff",  # cyan
+        "#ffd60a",  # yellow
+        "#32d74b",  # mint
+    ]
+    return colors[project_id % len(colors)]
+
+
+# --- Views ---
+
+
+@app.route("/")
+def index():
+    """Render the main Kanban board."""
+    with get_session() as session:
+        projects = session.query(Project).order_by(Project.name).all()
+        tickets = session.query(Ticket).order_by(Ticket.created_at.desc()).all()
+
+        # Generate color map for projects
+        project_colors = {project.id: get_project_color(project.id) for project in projects}
+
+        # Group tickets by status
+        columns = {
+            config.STATUS_PROPOSED: [],
+            config.STATUS_TODO: [],
+            config.STATUS_IN_PROGRESS: [],
+            config.STATUS_DONE: [],
+            config.STATUS_WONT_DO: [],
+        }
+        for ticket in tickets:
+            columns[ticket.status].append(ticket)
+
+        return render_template(
+            "index.html",
+            projects=projects,
+            columns=columns,
+            status_labels=config.STATUS_LABELS,
+            statuses=config.VALID_STATUSES,
+            project_colors=project_colors,
+        )
+
+
+@app.route("/projects")
+def projects_list():
+    """Render the projects management page."""
+    with get_session() as session:
+        projects = session.query(Project).order_by(Project.name).all()
+        return render_template("projects.html", projects=projects)
+
+
+# --- API Endpoints ---
+
+
+@app.route("/api/tickets", methods=["POST"])
+def create_ticket():
+    """Create a new ticket."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    title = data.get("title", "").strip()
+    project_id = data.get("project_id")
+
+    if not title:
+        return jsonify({"error": "Title is required"}), 400
+    if not project_id:
+        return jsonify({"error": "Project is required"}), 400
+
+    with get_session() as session:
+        project = session.get(Project, project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
+        ticket = Ticket(
+            title=title,
+            project_id=project_id,
+            description=data.get("description") or None,
+            acceptance_criteria=data.get("acceptance_criteria") or None,
+            scope=data.get("scope") or None,
+            prompt=data.get("prompt") or None,
+        )
+        session.add(ticket)
+        session.flush()
+
+        logger.info("✅ Created ticket: %s", ticket.title)
+        return jsonify({"id": ticket.id, "status": "created"}), 201
+
+
+@app.route("/api/tickets/<int:ticket_id>", methods=["GET"])
+def get_ticket(ticket_id: int):
+    """Get a single ticket's details."""
+    with get_session() as session:
+        ticket = session.get(Ticket, ticket_id)
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        return jsonify(
+            {
+                "id": ticket.id,
+                "title": ticket.title,
+                "description": ticket.description,
+                "project_id": ticket.project_id,
+                "project_name": ticket.project.name,
+                "status": ticket.status,
+                "acceptance_criteria": ticket.acceptance_criteria,
+                "scope": ticket.scope,
+                "prompt": ticket.prompt,
+                "created_at": ticket.created_at.isoformat(),
+                "updated_at": ticket.updated_at.isoformat(),
+            }
+        )
+
+
+@app.route("/api/tickets/<int:ticket_id>", methods=["PUT"])
+def update_ticket(ticket_id: int):
+    """Update an existing ticket."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    with get_session() as session:
+        ticket = session.get(Ticket, ticket_id)
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        # Update fields if provided
+        if "title" in data:
+            ticket.title = data["title"].strip()
+        if "description" in data:
+            ticket.description = data["description"] or None
+        if "project_id" in data:
+            project = session.get(Project, data["project_id"])
+            if not project:
+                return jsonify({"error": "Project not found"}), 404
+            ticket.project_id = data["project_id"]
+        if "status" in data:
+            new_status = data["status"]
+            if new_status not in config.VALID_STATUSES:
+                return jsonify({"error": f"Invalid status: {new_status}"}), 400
+            ticket.status = new_status
+        if "acceptance_criteria" in data:
+            ticket.acceptance_criteria = data["acceptance_criteria"] or None
+        if "scope" in data:
+            ticket.scope = data["scope"] or None
+        if "prompt" in data:
+            ticket.prompt = data["prompt"] or None
+
+        logger.info("📝 Updated ticket: %s", ticket.title)
+        return jsonify({"status": "updated"})
+
+
+@app.route("/api/tickets/<int:ticket_id>/status", methods=["PATCH"])
+def update_ticket_status(ticket_id: int):
+    """Update only a ticket's status (for drag-and-drop)."""
+    data = request.json
+    if not data or "status" not in data:
+        return jsonify({"error": "Status is required"}), 400
+
+    new_status = data["status"]
+    if new_status not in config.VALID_STATUSES:
+        return jsonify({"error": f"Invalid status: {new_status}"}), 400
+
+    with get_session() as session:
+        ticket = session.get(Ticket, ticket_id)
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        old_status = ticket.status
+        ticket.status = new_status
+
+        # Update project's last_modified if ticket is marked done
+        if new_status == config.STATUS_DONE and old_status != config.STATUS_DONE:
+            # The onupdate trigger on project.last_modified will handle this
+            # when we access it, but we can also explicitly touch the project
+            pass
+
+        logger.info("🔄 Ticket %s: %s → %s", ticket.title, old_status, new_status)
+        return jsonify({"status": "updated"})
+
+
+@app.route("/api/tickets/<int:ticket_id>", methods=["DELETE"])
+def delete_ticket(ticket_id: int):
+    """Delete a ticket."""
+    with get_session() as session:
+        ticket = session.get(Ticket, ticket_id)
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        title = ticket.title
+        session.delete(ticket)
+        logger.info("🗑️ Deleted ticket: %s", title)
+        return jsonify({"status": "deleted"})
+
+
+# --- Project API ---
+
+
+@app.route("/api/projects", methods=["POST"])
+def create_project():
+    """Create a new project."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    name = data.get("name", "").strip()
+    description = data.get("description", "").strip()
+    local_path = data.get("local_path", "").strip() or None
+
+    if not name or not description:
+        return jsonify({"error": "Name and description are required"}), 400
+
+    with get_session() as session:
+        existing = session.query(Project).filter_by(name=name).first()
+        if existing:
+            return jsonify({"error": "Project name already exists"}), 409
+
+        project = Project(name=name, description=description, local_path=local_path)
+        session.add(project)
+        session.flush()
+
+        logger.info("✅ Created project: %s", project.name)
+        return jsonify({"id": project.id, "status": "created"}), 201
+
+
+@app.route("/api/projects/<int:project_id>", methods=["GET"])
+def get_project(project_id: int):
+    """Get a single project's details."""
+    with get_session() as session:
+        project = session.get(Project, project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
+        return jsonify(
+            {
+                "id": project.id,
+                "name": project.name,
+                "description": project.description,
+                "local_path": project.local_path,
+                "last_modified": project.last_modified.isoformat() if project.last_modified else None,
+            }
+        )
+
+
+@app.route("/api/projects/<int:project_id>", methods=["PUT"])
+def update_project(project_id: int):
+    """Update an existing project."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    with get_session() as session:
+        project = session.get(Project, project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
+        if "name" in data:
+            new_name = data["name"].strip()
+            if new_name != project.name:
+                existing = session.query(Project).filter_by(name=new_name).first()
+                if existing:
+                    return jsonify({"error": "Project name already exists"}), 409
+            project.name = new_name
+        if "description" in data:
+            project.description = data["description"].strip()
+        if "local_path" in data:
+            local_path = data["local_path"]
+            project.local_path = local_path.strip() if local_path else None
+
+        logger.info("📝 Updated project: %s", project.name)
+        return jsonify({"status": "updated"})
+
+
+@app.route("/api/projects/<int:project_id>", methods=["DELETE"])
+def delete_project(project_id: int):
+    """Delete a project and all its tickets."""
+    with get_session() as session:
+        project = session.get(Project, project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
+        name = project.name
+        session.delete(project)
+        logger.info("🗑️ Deleted project: %s", name)
+        return jsonify({"status": "deleted"})
+
+
+if __name__ == "__main__":
+    # Database initialization is handled by Alembic migrations
+    # Run: uv run alembic upgrade head
+    logger.info("Starting Task Board on http://localhost:5001")
+    app.run(debug=config.DEBUG, port=5010)

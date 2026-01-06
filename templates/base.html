@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Board{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        surface: {
+                            50: '#f8fafc',
+                            100: '#1c1c1e',
+                            200: '#2c2c2e',
+                            300: '#3a3a3c',
+                            400: '#48484a',
+                        },
+                        accent: {
+                            blue: '#0a84ff',
+                            green: '#30d158',
+                            orange: '#ff6600',
+                            red: '#ff453a',
+                            purple: '#bf5af2',
+                            yellow: '#ffd60a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['SF Mono', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- SortableJS for drag-and-drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-black text-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-surface-100 border-b border-surface-300 sticky top-0 z-50">
+        <div class="w-full px-2 sm:px-4">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-6">
+                    <a href="{{ url_for('index') }}" class="text-lg font-semibold text-white hover:text-accent-blue transition-colors">
+                        Task Board
+                    </a>
+                    <div class="hidden sm:flex items-center gap-4">
+                        <a href="{{ url_for('index') }}" 
+                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'index' else 'text-gray-400 hover:text-white' }} transition-colors">
+                            Board
+                        </a>
+                        <a href="{{ url_for('projects_list') }}" 
+                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'projects_list' else 'text-gray-400 hover:text-white' }} transition-colors">
+                            Projects
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openNewTicketModal()" 
+                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors">
+                        + New Ticket
+                    </button>
+                    <button onclick="openNewProjectModal()" 
+                            class="bg-accent-orange hover:opacity-90 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors">
+                        + New Project
+                    </button>
+                    <button onclick="toggleSettingsPanel()" 
+                            class="text-gray-400 hover:text-white p-2 transition-colors"
+                            title="Settings">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="w-full px-2 sm:px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Ticket Modal -->
+    <div id="ticketModal" class="hidden fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-surface-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
+                <form id="ticketForm" onsubmit="saveTicket(event)">
+                    <input type="hidden" id="ticketId" name="ticketId">
+                    
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
+                        <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
+                        <button type="button" onclick="closeTicketModal()" class="text-gray-400 hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="px-6 py-4 space-y-4 overflow-y-auto max-h-[60vh]">
+                        <!-- Title -->
+                        <div>
+                            <label for="ticketTitle" class="block text-sm font-medium text-gray-300 mb-1">
+                                Title <span class="text-accent-red">*</span>
+                            </label>
+                            <input type="text" id="ticketTitle" name="title" required
+                                   class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   placeholder="Enter ticket title">
+                        </div>
+                        
+                        <!-- Project -->
+                        <div>
+                            <label for="ticketProject" class="block text-sm font-medium text-gray-300 mb-1">
+                                Project <span class="text-accent-red">*</span>
+                            </label>
+                            <select id="ticketProject" name="project_id" required
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                <option value="">Select a project</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}">{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Status (only shown when editing) -->
+                        <div id="statusField" class="hidden">
+                            <label for="ticketStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                            <select id="ticketStatus" name="status"
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                {% for status in statuses %}
+                                <option value="{{ status }}">{{ status_labels[status] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div>
+                            <label for="ticketDescription" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                            <textarea id="ticketDescription" name="description" rows="3"
+                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
+                                      placeholder="Will be generated by AI"></textarea>
+                            <!-- TODO: Add AI generation button here -->
+                        </div>
+                        
+                        <!-- Acceptance Criteria -->
+                        <div>
+                            <label for="ticketCriteria" class="block text-sm font-medium text-gray-300 mb-1">Acceptance Criteria</label>
+                            <textarea id="ticketCriteria" name="acceptance_criteria" rows="3"
+                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
+                                      placeholder="Will be generated by AI"></textarea>
+                            <!-- TODO: Add AI generation button here -->
+                        </div>
+                        
+                        <!-- Scope -->
+                        <div>
+                            <label for="ticketScope" class="block text-sm font-medium text-gray-300 mb-1">Scope</label>
+                            <textarea id="ticketScope" name="scope" rows="3"
+                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
+                                      placeholder="Files affected, tests needed, risks, trade-offs..."></textarea>
+                            <!-- TODO: Add AI generation button here -->
+                        </div>
+                        
+                        <!-- Prompt -->
+                        <div>
+                            <label for="ticketPrompt" class="block text-sm font-medium text-gray-300 mb-1">Cursor Prompt</label>
+                            <textarea id="ticketPrompt" name="prompt" rows="4"
+                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none font-mono text-sm"
+                                      placeholder="Markdown-formatted prompt for Cursor..."></textarea>
+                            <!-- TODO: Add AI generation button here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-surface-200">
+                        <button type="button" id="deleteTicketBtn" onclick="deleteCurrentTicket()" 
+                                class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
+                            Delete Ticket
+                        </button>
+                        <div class="flex items-center gap-3 ml-auto">
+                            <button type="button" onclick="closeTicketModal()" 
+                                    class="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                                Save Ticket
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="hidden fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProjectModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-surface-100 rounded-2xl w-full max-w-lg shadow-2xl border border-surface-300">
+                <form id="projectForm" onsubmit="saveProject(event)">
+                    <input type="hidden" id="projectId" name="projectId">
+                    
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
+                        <h2 id="projectModalTitle" class="text-lg font-semibold text-white">New Project</h2>
+                        <button type="button" onclick="closeProjectModal()" class="text-gray-400 hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="px-6 py-4 space-y-4">
+                        <div>
+                            <label for="projectName" class="block text-sm font-medium text-gray-300 mb-1">
+                                Name <span class="text-accent-red">*</span>
+                            </label>
+                            <input type="text" id="projectName" name="name" required
+                                   class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   placeholder="Project name">
+                        </div>
+                        
+                        <div>
+                            <label for="projectDescription" class="block text-sm font-medium text-gray-300 mb-1">
+                                Description <span class="text-accent-red">*</span>
+                            </label>
+                            <textarea id="projectDescription" name="description" rows="3" required
+                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
+                                      placeholder="What is this project about?"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="projectLocalPath" class="block text-sm font-medium text-gray-300 mb-1">
+                                Local Directory <span class="text-gray-500 text-xs">(optional)</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <input type="text" id="projectLocalPath" name="local_path"
+                                       class="flex-1 bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                       placeholder="/path/to/project (optional)">
+                                <button type="button" onclick="selectDirectory()"
+                                        class="bg-surface-300 hover:bg-surface-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
+                                    Browse
+                                </button>
+                            </div>
+                            <input type="file" id="directoryPicker" webkitdirectory="" directory="" multiple="" style="display: none;" onchange="handleDirectorySelect(event)">
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-surface-200">
+                        <button type="button" id="deleteProjectBtn" onclick="deleteCurrentProject()" 
+                                class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
+                            Delete Project
+                        </button>
+                        <div class="flex items-center gap-3 ml-auto">
+                            <button type="button" onclick="closeProjectModal()" 
+                                    class="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                                Save Project
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="hidden fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
+        <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-surface-100 border-l border-surface-300 shadow-2xl overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Settings</h2>
+                    <button onclick="toggleSettingsPanel()" class="text-gray-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Column Visibility -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-300 mb-3">Column Visibility</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-proposed" class="column-toggle" data-column="proposed" checked onchange="toggleColumnVisibility('proposed', this.checked)">
+                            <span class="text-sm text-white">Proposed</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-todo" class="column-toggle" data-column="todo" checked onchange="toggleColumnVisibility('todo', this.checked)">
+                            <span class="text-sm text-white">To Do</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-in_progress" class="column-toggle" data-column="in_progress" checked onchange="toggleColumnVisibility('in_progress', this.checked)">
+                            <span class="text-sm text-white">In Progress</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-done" class="column-toggle" data-column="done" checked onchange="toggleColumnVisibility('done', this.checked)">
+                            <span class="text-sm text-white">Done</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-wont_do" class="column-toggle" data-column="wont_do" checked onchange="toggleColumnVisibility('wont_do', this.checked)">
+                            <span class="text-sm text-white">Won't Do</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Default Filter Preferences -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-300 mb-3">Default Filter Preferences</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Default Project Filter</label>
+                            <div class="flex gap-2">
+                                <button onclick="setDefaultProjectFilter('all')" 
+                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded transition-colors">
+                                    All Projects
+                                </button>
+                                <button onclick="setDefaultProjectFilter('none')" 
+                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded transition-colors">
+                                    No Projects
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Choose which projects are selected by default when the page loads</p>
+                        </div>
+                        <div>
+                            <label for="defaultSortOrder" class="block text-xs text-gray-400 mb-2">Default Sort Order</label>
+                            <select id="defaultSortOrder" onchange="saveDefaultSortOrder()"
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                <option value="date-desc">Date (Newest First)</option>
+                                <option value="date-asc">Date (Oldest First)</option>
+                                <option value="project-asc">Project (A-Z)</option>
+                                <option value="project-desc">Project (Z-A)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">Choose the default sort order when the page loads</p>
+                        </div>
+                        <div>
+                            <label for="dateRangeFilter" class="block text-xs text-gray-400 mb-2">Date Range Filter</label>
+                            <select id="dateRangeFilter" onchange="applyDateRangeFilter()"
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                <option value="0">Show all tickets</option>
+                                <option value="1">Last 1 day</option>
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="180">Last 180 days</option>
+                                <option value="365">Last year</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">Filter tickets by creation date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/board.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - Task Board{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-white">Projects</h1>
+</div>
+
+{% if projects %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for project in projects %}
+    <div class="bg-surface-100 rounded-xl border border-surface-300 p-5 hover:border-surface-400 transition-colors">
+        <div class="flex items-start justify-between mb-3">
+            <h2 class="text-lg font-semibold text-white">{{ project.name }}</h2>
+            <button onclick="editProject({{ project.id }})" 
+                    class="text-gray-400 hover:text-white transition-colors p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+            </button>
+        </div>
+        <p class="text-sm text-gray-400 mb-4 line-clamp-3">{{ project.description }}</p>
+        <div class="flex items-center justify-between">
+            {% if project.local_path %}
+            <span class="text-xs text-gray-400 font-mono truncate max-w-[60%]" title="{{ project.local_path }}">
+                📁 {{ project.local_path }}
+            </span>
+            {% else %}
+            <span class="text-xs text-gray-500">No directory set</span>
+            {% endif %}
+            <span class="text-xs text-gray-500">
+                {{ project.tickets|length }} ticket{{ 's' if project.tickets|length != 1 else '' }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16">
+    <div class="text-gray-500 mb-4">
+        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-400 mb-2">No projects yet</h3>
+    <p class="text-gray-500 mb-6">Use the "New Project" button in the navigation to create your first project</p>
+</div>
+{% endif %}
+{% endblock %}
+
