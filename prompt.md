@@ -95,8 +95,13 @@ Create a Flask-based task management application with the following specificatio
 ## File Structure
 ```
 project/
-├── app.py                 # Flask app and routes
-├── models.py              # SQLAlchemy models
+├── src/                   # Source code
+│   ├── app.py             # Flask app and routes
+│   ├── scheduler.py       # Database backup scheduler
+│   ├── config.py          # Configuration
+│   ├── database_orm.py    # SQLAlchemy models
+│   ├── datamodels.py      # Data transfer objects
+│   └── db.py              # Database utilities
 ├── alembic.ini            # Alembic configuration
 ├── alembic/
 │   ├── env.py
@@ -111,9 +116,9 @@ project/
 │   │   └── style.css      # Custom styles
 │   └── js/
 │       └── board.js       # Drag-and-drop and interactions
-├── requirements.txt
-├── README.md              # Generated from this spec using existing README template
-└── config.py              # Configuration
+├── tests/                 # Test suite
+├── pyproject.toml         # Dependencies & tool config
+└── README.md              # Generated from this spec using existing README template
 ```
 
 ## Dependencies (requirements.txt)

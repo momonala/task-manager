@@ -1,43 +1,67 @@
-# Apply Rule
+# Apply Rule (Meta-Rule)
 
-## Overview
-Apply a specific coding rule to guide code generation, review, or refactoring. This command ensures that all code changes follow the standards defined in the specified rule.
+## Purpose
+
+Force explicit application of a single, named project rule to guide **code generation, documentation changes** etc, even when automatic rule scoping would not normally apply.
+
+- You want to enforce documentation, architecture, or style constraints explicitly
+This meta-rule exists to reduce ambiguity, override default heuristics, and ensure consistent standards in cross-cutting or mixed-context tasks.
 
 ## Available Rules
-- `python-basics` - Python coding standards and best practices
-- `swift-ios` - Swift/iOS clean code and maintainability standards
-- `webdev` - Web development standards for JavaScript, HTML, and CSS
-- `architecture-planning` - Architecture, planning, and feedback practices
+
+Rules are defined in:
+
+```
+.cursor/rules/<rule-name>/RULE.md
+```
 
 ## Usage
-After typing `/apply-rule`, specify which rule to apply:
-- `/apply-rule python-basics`
-- `/apply-rule swift-ios`
+
+After typing `/apply-rule`, specify exactly one rule name:
+
+Ex:
+
+- `/apply-rule python`
+- `/apply-rule swift`
 - `/apply-rule webdev`
-- `/apply-rule architecture-planning`
+- `/apply-rule architecture`
+- `/apply-rule docs`
+- `/apply-rule cleancode`
 
-## Instructions
-1. **Identify the rule**: Determine which rule applies to the current task based on file types or context
-2. **Load the rule**: Reference the rule file from `.cursor/rules/{rule-name}/RULE.md`
-3. **Apply standards**: All code changes, suggestions, and reviews must strictly follow the guidelines in the specified rule
-4. **Enforce consistency**: Ensure any existing code being modified also adheres to the rule's standards
+If multiple standards are required, choose multiple.
 
-## Example
-When applying `swift-ios` rule:
-- Use value types over reference types
-- Prefer `guard` statements for early returns
-- Avoid force unwrapping
-- Use weak references in closures
-- Follow protocol-oriented design patterns
+## Execution Semantics
 
-When applying `python-basics` rule:
-- Use modern type hints (`list[str]` not `List[str]`)
-- Prefer `dataclasses` for structured data
-- Fail loudly with specific exceptions
-- Use context managers for resources
+When this command is invoked:
+
+1. **Resolve the rule**
+  - Load `.cursor/rules/<rule-name>/RULE.md`
+  - Treat it as authoritative for the remainder of the task
+2. **Override defaults**
+  - Ignore conflicting or less-specific rules
+  - Ignore file-glob–based auto-application unless explicitly compatible
+3. **Apply strictly**
+  - All generated code, edits, reviews, and suggestions must conform
+  - Existing code touched by the task must be brought into compliance
+4. **Surface conflicts**
+  - If existing code cannot be made compliant without semantic changes, explain the conflict explicitly
+  - Do not silently violate the rule
+
+## Enforcement Guarantees
+
+- No partial application: the rule applies to the entire task
+- No silent exceptions: deviations must be justified or rejected
+- No dilution: avoid mixing guidance from multiple rules unless one explicitly allows it
+
+## Output Expectations
+
+- Generated output should visibly reflect the rule’s constraints
+- Reviews should cite the rule when rejecting or requesting changes
+- Documentation updates should align with the rule’s structure and tone
 
 ## Notes
-- Rules are automatically applied based on file globs, but this command ensures explicit adherence
-- Use this when you want to ensure a specific rule is followed regardless of file type
-- Combine with code review or refactoring tasks for best results
+
+- This command is declarative, not advisory
+- Prefer explicit failure over implicit non-compliance
+- If the rule is underspecified, follow its intent conservatively and note assumptions
 

@@ -3,18 +3,22 @@
 import logging
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask
+from flask import jsonify
+from flask import render_template
+from flask import request
 
 from src import config
-from src.database_orm import Project, Ticket
+from src.database_orm import Project
+from src.database_orm import Ticket
 from src.db import get_session
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# Get the project root directory
-PROJECT_ROOT = Path(__file__).parent
+# Get the project root directory (parent of src/)
+PROJECT_ROOT = Path(__file__).parent.parent
 
 app = Flask(
     __name__,
@@ -320,8 +324,10 @@ def delete_project(project_id: int):
         return jsonify({"status": "deleted"})
 
 
-if __name__ == "__main__":
-    # Database initialization is handled by Alembic migrations
-    # Run: uv run alembic upgrade head
-    logger.info("Starting Task Board on http://localhost:5001")
+def main():
+    logger.info("Starting Task Board on http://localhost:5010")
     app.run(debug=config.DEBUG, port=5010)
+
+
+if __name__ == "__main__":
+    main()

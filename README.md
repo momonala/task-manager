@@ -23,7 +23,7 @@ flowchart LR
         Git[(Git Repo)]
     end
     subgraph Services
-        Server[Flask Server :5001]
+        Server[Flask Server :5010]
         Scheduler[Backup Scheduler]
     end
     
@@ -63,16 +63,16 @@ uv run alembic upgrade head
 
 Start the Flask server:
 ```bash
-uv run python app.py
+uv run python -m src.app
 ```
 
-Server runs at http://localhost:5001
+Server runs at http://localhost:5010
 
 ### With Automatic Backups
 
 Run the database backup scheduler (optional):
 ```bash
-uv run python scheduler.py
+uv run python -m src.scheduler
 ```
 
 The scheduler will automatically commit and push database changes to git every hour at the top of the hour.
@@ -123,6 +123,8 @@ sudo systemctl restart projects_task-manager_scheduler.service
 task-manager/
 ├── src/                       # Source code
 │   ├── __init__.py
+│   ├── app.py                 # Flask application entry point
+│   ├── scheduler.py           # Hourly database backup scheduler
 │   ├── config.py              # Configuration constants
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
 │   ├── datamodels.py          # Data transfer objects
@@ -152,8 +154,6 @@ task-manager/
 │   ├── install.sh             # Automated installation script
 │   ├── projects_task-manager.service          # Flask app systemd service
 │   └── projects_task-manager_scheduler.service # Backup scheduler service
-├── app.py                     # Flask application entry point
-├── scheduler.py               # Hourly database backup scheduler
 ├── pyproject.toml             # Dependencies & tool config
 ├── TODO.md                    # Development roadmap
 └── README.md
@@ -178,7 +178,7 @@ task-manager/
 ### POST /api/tickets
 
 ```bash
-curl -X POST http://localhost:5001/api/tickets \
+curl -X POST http://localhost:5010/api/tickets \
   -H "Content-Type: application/json" \
   -d '{"title": "Implement feature X", "project_id": 1}'
 ```
@@ -247,5 +247,5 @@ schedule.every().hour.at(":00").do(commit_if_changed)
 ### Manual Backup
 You can manually trigger a backup by running the commit function:
 ```bash
-uv run python -c "from scheduler import commit_if_changed; commit_if_changed()"
+uv run python -c "from src.scheduler import commit_if_changed; commit_if_changed()"
 ```

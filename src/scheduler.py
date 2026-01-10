@@ -6,12 +6,13 @@ from datetime import datetime
 from pathlib import Path
 
 import schedule
+
 from src.config import DATABASE_PATH
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 FILE_TO_COMMIT = DATABASE_PATH
 BRANCH = "main"
 

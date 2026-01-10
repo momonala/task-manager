@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from src import config, db
+from src import config
+from src import db
 from src.database_orm import Base
 
 

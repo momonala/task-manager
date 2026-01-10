@@ -4,8 +4,10 @@ import json
 
 import pytest
 
-from app import app, get_project_color
-from src.database_orm import Project, Ticket
+from src.app import app
+from src.app import get_project_color
+from src.database_orm import Project
+from src.database_orm import Ticket
 from src.db import get_session
 
 # Test constants

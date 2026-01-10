@@ -4,7 +4,8 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from src.config import STATUS_TODO
-from src.database_orm import Project, Ticket
+from src.database_orm import Project
+from src.database_orm import Ticket
 from src.db import get_session
 
 

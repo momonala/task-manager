@@ -1,7 +1,8 @@
 """Tests for dataclasses in datamodels.py."""
 
 from src import config
-from src.datamodels import ProjectData, TicketData
+from src.datamodels import ProjectData
+from src.datamodels import TicketData
 
 
 def test_ticket_data():
