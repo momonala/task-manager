@@ -63,7 +63,7 @@ uv run alembic upgrade head
 
 Start the Flask server:
 ```bash
-uv run python -m src.app
+uv run app
 ```
 
 Server runs at http://localhost:5010

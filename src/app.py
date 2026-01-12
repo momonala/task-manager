@@ -25,7 +25,6 @@ app = Flask(
     template_folder=str(PROJECT_ROOT / "templates"),
     static_folder=str(PROJECT_ROOT / "static"),
 )
-app.secret_key = config.SECRET_KEY
 
 
 def get_project_color(project_id: int) -> str:

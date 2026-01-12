@@ -16,7 +16,15 @@ dependencies = [
     "requests>=2.31.0",
     "schedule>=1.2.0",
     "isort>=7.0.0",
+    "typer>=0.9.0",
 ]
+
+[tool.config]
+# Server settings
+flask_port = 5001
+
+# Database settings
+database_filename = "taskboard.db"
 
 [build-system]
 requires = ["hatchling"]
@@ -27,6 +35,7 @@ packages = ["src"]
 
 [project.scripts]
 app = "src.app:main"
+config = "src.config:main"
 
 [tool.black]
 line-length = 110

@@ -5,7 +5,7 @@
  [Service]
  WorkingDirectory=/home/mnalavadi/task-manager
  Type=idle
-ExecStart=/home/mnalavadi/.local/bin/uv run python -m src.app
+ExecStart=/home/mnalavadi/.local/bin/uv run app
 User=mnalavadi
 
  [Install]
