@@ -1,5 +1,8 @@
 # Task Board
 
+[![CI](https://github.com/momonala/task-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/momonala/task-manager/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/momonala/task-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/momonala/task-manager)
+
 A Flask-based Kanban task management application with drag-and-drop functionality, automatic database backups, and a dark mode UI inspired by Apple documentation aesthetics.
 
 ## Tech Stack
