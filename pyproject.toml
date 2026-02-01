@@ -21,7 +21,7 @@ dependencies = [
 
 [tool.config]
 # Server settings
-flask_port = 5001
+flask_port = 5010
 
 # Database settings
 database_filename = "taskboard.db"

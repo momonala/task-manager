@@ -17,7 +17,7 @@ runner = CliRunner()
     [
         ("--project-name", "task-manager"),
         ("--project-version", "0.1.0"),
-        ("--flask-port", "5001"),
+        ("--flask-port", "5010"),
     ],
 )
 def test_config_returns_single_value(flag: str, expected_output: str):
