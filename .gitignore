@@ -68,7 +68,7 @@ ehthumbs.db
 Thumbs.db
 
 # Secrets and credentials
-values.py
+**/*values.py
 google_application_credentials.json
 *.pem
 *.key
@@ -89,14 +89,7 @@ app_calendar_events.json
 recent_locations.html
 static/*.html
 
-# Database
-data/*.db-journal
-data/*.db-wal
-data/*.db-shm
-
-# Temporary files and scripts
-tmp/
-
 # Local development
 .local/
 .ipython/
+.cursor/
