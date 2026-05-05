@@ -33,7 +33,7 @@ def commit_if_changed() -> None:
         run_command(["git", "push", "origin", BRANCH])
         logger.info(f"✅ [{datetime.now()}] Database backup committed and pushed.")
     else:
-        logger.info(f"⏭️ [{datetime.now()}] No changes to database. Skipping backup.")
+        logger.debug(f"⏭️ [{datetime.now()}] No changes to database. Skipping backup.")
 
 
 if __name__ == "__main__":
