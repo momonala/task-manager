@@ -80,10 +80,7 @@
                            data-project-id="{{ project.id }}"
                            data-project-name="{{ project.name|lower }}">
                         <input type="checkbox" class="project-filter-checkbox" value="{{ project.id }}" checked onchange="updateProjectFilter()">
-                        <span class="text-sm text-white flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background-color: {{ project_colors[project.id] }}"></span>
-                            {{ project.name }}
-                        </span>
+                        <span class="text-sm text-white">{{ project.name }}</span>
                     </label>
                     {% endfor %}
                 </div>
@@ -92,7 +89,7 @@
     </div>
 
     <select id="sortSelect" onchange="sortTickets()"
-            class="bg-surface-200 border border-surface-300 rounded-full px-5 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue hover:bg-surface-300 transition-colors">
+            class="bg-surface-200 border border-surface-300 rounded-full pl-5 pr-8 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue hover:bg-surface-300 transition-colors">
         <option value="date-desc">Date (Newest First)</option>
         <option value="date-asc">Date (Oldest First)</option>
         <option value="project-asc">Project (A-Z)</option>
