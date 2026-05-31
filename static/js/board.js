@@ -178,8 +178,11 @@ function applyAllFilters() {
 
     document.querySelectorAll('.ticket-card').forEach(card => {
         const projectId = card.dataset.projectId;
+        const isDeprecated = card.dataset.deprecated === 'true';
         const ticketDate = new Date(parseFloat(card.dataset.timestamp || 0) * 1000);
-        const visible = selectedProjects.has(projectId) && (!cutoffDate || ticketDate >= cutoffDate);
+        const dateOk = !cutoffDate || ticketDate >= cutoffDate;
+        // Deprecated tickets bypass the project filter but still respect date range
+        const visible = isDeprecated ? dateOk : (selectedProjects.has(projectId) && dateOk);
         card.classList.toggle('hidden-by-filter', !visible);
     });
 
@@ -356,6 +359,7 @@ function openNewProjectModal() {
 
     document.getElementById('projectForm').reset();
     document.getElementById('projectId').value = '';
+    document.getElementById('projectDeprecated').checked = false;
     document.getElementById('projectModalTitle').textContent = 'New Project';
     document.getElementById('deleteProjectBtn').classList.add('hidden');
 
@@ -377,6 +381,7 @@ async function editProject(projectId) {
         document.getElementById('projectName').value = project.name;
         document.getElementById('projectDescription').value = project.description;
         document.getElementById('projectLocalPath').value = project.local_path || '';
+        document.getElementById('projectDeprecated').checked = !!project.deprecated;
         document.getElementById('projectModalTitle').textContent = 'Edit Project';
         document.getElementById('deleteProjectBtn').classList.remove('hidden');
 
@@ -410,6 +415,7 @@ async function saveProject(event) {
         name: document.getElementById('projectName').value,
         description: document.getElementById('projectDescription').value,
         local_path: document.getElementById('projectLocalPath').value,
+        deprecated: document.getElementById('projectDeprecated').checked,
     };
 
     try {

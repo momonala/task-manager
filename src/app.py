@@ -57,6 +57,7 @@ def index():
 
         # Generate color map for projects
         project_colors = {project.id: get_project_color(project.id) for project in projects}
+        deprecated_project_ids = {project.id for project in projects if project.deprecated}
 
         # Group tickets by status
         columns = {
@@ -76,6 +77,7 @@ def index():
             status_labels=config.STATUS_LABELS,
             statuses=config.VALID_STATUSES,
             project_colors=project_colors,
+            deprecated_project_ids=deprecated_project_ids,
         )
 
 
@@ -275,6 +277,7 @@ def get_project(project_id: int):
                 "name": project.name,
                 "description": project.description,
                 "local_path": project.local_path,
+                "deprecated": project.deprecated,
                 "last_modified": project.last_modified.isoformat() if project.last_modified else None,
             }
         )
@@ -304,6 +307,8 @@ def update_project(project_id: int):
         if "local_path" in data:
             local_path = data["local_path"]
             project.local_path = local_path.strip() if local_path else None
+        if "deprecated" in data:
+            project.deprecated = bool(data["deprecated"])
 
         logger.info("📝 Updated project: %s", project.name)
         return jsonify({"status": "updated"})

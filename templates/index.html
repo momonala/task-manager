@@ -2,18 +2,19 @@
 
 {% block title %}Board - Task Board{% endblock %}
 
-{% macro render_ticket(ticket, project_colors, muted=false) %}
-{% set card_bg = 'bg-surface-200/50' if muted else 'bg-surface-200' %}
-{% set card_border = 'border-surface-300/50' if muted else 'border-surface-300' %}
-{% set card_extra = ' opacity-60 hover:opacity-80' if muted else '' %}
-{% set badge_opacity = '25%' if muted else '45%' %}
-{% set text_dim = 'text-gray-600' if muted else 'text-gray-500' %}
-{% set title_color = 'text-gray-400' if muted else 'text-white' %}
+{% macro render_ticket(ticket, project_colors, deprecated_ids, muted=false) %}
+{% set is_muted = muted or (ticket.project_id in deprecated_ids) %}
+{% set card_bg = 'bg-surface-200/50' if is_muted else 'bg-surface-200' %}
+{% set card_border = 'border-surface-300/50' if is_muted else 'border-surface-300' %}
+{% set card_extra = ' opacity-60 hover:opacity-80' if is_muted else '' %}
+{% set badge_opacity = '25%' if is_muted else '45%' %}
+{% set title_color = 'text-gray-400' if is_muted else 'text-white' %}
 <div class="ticket-card {{ card_bg }} rounded-lg p-3 border {{ card_border }} hover:border-surface-400 cursor-pointer transition-all{{ card_extra }}"
      data-ticket-id="{{ ticket.id }}"
      data-project-id="{{ ticket.project_id }}"
      data-timestamp="{{ ticket.created_at.timestamp() }}"
      data-project-name="{{ ticket.project.name }}"
+     data-deprecated="{{ 'true' if ticket.project_id in deprecated_ids else 'false' }}"
      style="--project-color: {{ project_colors[ticket.project_id] }}"
      onclick="editTicket({{ ticket.id }})">
     <div class="mb-2 px-3 py-0.5 rounded-full flex items-center justify-between"
@@ -25,7 +26,7 @@
 </div>
 {% endmacro %}
 
-{% macro render_column(status, label, tickets, project_colors, muted=false) %}
+{% macro render_column(status, label, tickets, project_colors, deprecated_ids, muted=false) %}
 <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="{{ status }}">
     <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
         <h2 class="font-semibold text-white flex items-center gap-2">
@@ -35,7 +36,7 @@
     </div>
     <div id="column-{{ status }}" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="{{ status }}">
         {% for ticket in tickets %}
-        {{ render_ticket(ticket, project_colors, muted=muted) }}
+        {{ render_ticket(ticket, project_colors, deprecated_ids, muted=muted) }}
         {% endfor %}
     </div>
 </div>
@@ -74,7 +75,7 @@
                     </button>
                 </div>
                 <div id="projectCheckboxes" class="space-y-1">
-                    {% for project in projects %}
+                    {% for project in projects if not project.deprecated %}
                     <label class="project-filter-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-200 cursor-pointer"
                            data-project-id="{{ project.id }}"
                            data-project-name="{{ project.name|lower }}">
@@ -101,11 +102,11 @@
 
 <!-- Kanban Board -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-3 w-full" id="kanbanBoard">
-    {{ render_column('proposed',    status_labels['proposed'],    columns['proposed'],    project_colors) }}
-    {{ render_column('todo',        status_labels['todo'],        columns['todo'],        project_colors) }}
-    {{ render_column('in_progress', status_labels['in_progress'], columns['in_progress'], project_colors) }}
-    {{ render_column('done',        status_labels['done'],        columns['done'],        project_colors) }}
-    {{ render_column('wont_do',     status_labels['wont_do'],     columns['wont_do'],     project_colors, muted=true) }}
+    {{ render_column('proposed',    status_labels['proposed'],    columns['proposed'],    project_colors, deprecated_project_ids) }}
+    {{ render_column('todo',        status_labels['todo'],        columns['todo'],        project_colors, deprecated_project_ids) }}
+    {{ render_column('in_progress', status_labels['in_progress'], columns['in_progress'], project_colors, deprecated_project_ids) }}
+    {{ render_column('done',        status_labels['done'],        columns['done'],        project_colors, deprecated_project_ids) }}
+    {{ render_column('wont_do',     status_labels['wont_do'],     columns['wont_do'],     project_colors, deprecated_project_ids, muted=true) }}
 </div>
 
 <!-- Empty State -->

@@ -10,13 +10,18 @@
 {% if projects %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for project in projects %}
-    <div class="bg-surface-100 rounded-xl border border-surface-300 p-5 hover:border-surface-400 transition-colors">
+    <div class="bg-surface-100 rounded-xl border border-surface-300 p-5 hover:border-surface-400 transition-colors{% if project.deprecated %} opacity-40{% endif %}">
         <div class="flex items-start justify-between mb-3">
-            <h2 class="text-lg font-semibold text-white">{{ project.name }}</h2>
-            <button onclick="editProject({{ project.id }})" 
-                    class="text-gray-400 hover:text-white transition-colors p-1">
+            <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-lg font-semibold text-white">{{ project.name }}</h2>
+                {% if project.deprecated %}
+                <span class="text-xs text-gray-400 bg-surface-300 px-2 py-0.5 rounded-full">Deprecated</span>
+                {% endif %}
+            </div>
+            <button onclick="editProject({{ project.id }})"
+                    class="text-gray-400 hover:text-white transition-colors p-1 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
             </button>

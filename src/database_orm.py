@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy import Text
@@ -27,6 +28,7 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str] = mapped_column(Text)
     local_path: Mapped[str | None] = mapped_column(String(500), default=None)
+    deprecated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     last_modified: Mapped[datetime] = mapped_column(
         server_default=func.now(),
         onupdate=func.now(),
