@@ -2,20 +2,58 @@
 
 {% block title %}Board - Task Board{% endblock %}
 
+{% macro render_ticket(ticket, project_colors, muted=false) %}
+{% set card_bg = 'bg-surface-200/50' if muted else 'bg-surface-200' %}
+{% set card_border = 'border-surface-300/50' if muted else 'border-surface-300' %}
+{% set card_extra = ' opacity-60 hover:opacity-80' if muted else '' %}
+{% set badge_opacity = '25%' if muted else '45%' %}
+{% set text_dim = 'text-gray-600' if muted else 'text-gray-500' %}
+{% set title_color = 'text-gray-400' if muted else 'text-white' %}
+<div class="ticket-card {{ card_bg }} rounded-lg p-3 border {{ card_border }} hover:border-surface-400 cursor-pointer transition-all{{ card_extra }}"
+     data-ticket-id="{{ ticket.id }}"
+     data-project-id="{{ ticket.project_id }}"
+     data-timestamp="{{ ticket.created_at.timestamp() }}"
+     data-project-name="{{ ticket.project.name }}"
+     style="--project-color: {{ project_colors[ticket.project_id] }}"
+     onclick="editTicket({{ ticket.id }})">
+    <div class="mb-2 px-3 py-0.5 rounded-full flex items-center justify-between"
+         style="background-color: color-mix(in srgb, var(--project-color) {{ badge_opacity }}, #2c2c2e)">
+        <span class="project-badge text-xs text-white">{{ ticket.project.name }}</span>
+        <span class="text-xs text-white/70">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
+    </div>
+    <h3 class="text-sm font-medium {{ title_color }} mb-2 line-clamp-2">{{ ticket.title }}</h3>
+</div>
+{% endmacro %}
+
+{% macro render_column(status, label, tickets, project_colors, muted=false) %}
+<div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="{{ status }}">
+    <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
+        <h2 class="font-semibold text-white flex items-center gap-2">
+            {{ label }}
+            <span class="text-gray-500 font-normal text-sm">({{ tickets|length }})</span>
+        </h2>
+    </div>
+    <div id="column-{{ status }}" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="{{ status }}">
+        {% for ticket in tickets %}
+        {{ render_ticket(ticket, project_colors, muted=muted) }}
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
 {% block content %}
 <!-- Project Filter & Sort -->
 <div class="mb-6 flex items-center gap-4 flex-wrap">
-    <label class="text-sm text-gray-400">Filter by project:</label>
     <div class="relative flex-1 max-w-md">
         <div class="relative">
             <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <input type="text" id="projectSearch" 
-                   placeholder="Search projects..." 
+            <input type="text" id="projectSearch"
+                   placeholder="Search projects..."
                    oninput="filterProjectsBySearch(this.value)"
-                   class="w-full bg-surface-200 border border-surface-300 rounded-lg pl-10 pr-8 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
-            <button id="clearSearchBtn" onclick="clearProjectSearch()" 
+                   class="w-full bg-surface-200 border border-surface-300 rounded-full pl-10 pr-8 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+            <button id="clearSearchBtn" onclick="clearProjectSearch()"
                     class="hidden absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -25,18 +63,16 @@
         <!-- Project checkboxes dropdown -->
         <div id="projectFilterDropdown" class="hidden absolute top-full mt-2 bg-surface-100 border border-surface-300 rounded-lg shadow-lg z-50 w-full max-h-[300px] overflow-y-auto">
             <div class="p-2">
-                <!-- Action buttons -->
                 <div class="flex gap-2 mb-2 pb-2 border-b border-surface-300">
-                    <button onclick="selectAllProjects()" 
-                            class="flex-1 text-xs text-accent-blue hover:text-blue-400 font-medium px-2 py-1 rounded hover:bg-surface-200 transition-colors">
+                    <button onclick="selectAllProjects()"
+                            class="flex-1 text-xs text-accent-blue hover:text-blue-400 font-medium px-2 py-1 rounded-full hover:bg-surface-200 transition-colors">
                         Select All
                     </button>
-                    <button onclick="selectNoneProjects()" 
-                            class="flex-1 text-xs text-gray-400 hover:text-white font-medium px-2 py-1 rounded hover:bg-surface-200 transition-colors">
+                    <button onclick="selectNoneProjects()"
+                            class="flex-1 text-xs text-gray-400 hover:text-white font-medium px-2 py-1 rounded-full hover:bg-surface-200 transition-colors">
                         Select None
                     </button>
                 </div>
-                <!-- Project checkboxes -->
                 <div id="projectCheckboxes" class="space-y-1">
                     {% for project in projects %}
                     <label class="project-filter-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-200 cursor-pointer"
@@ -53,10 +89,9 @@
             </div>
         </div>
     </div>
-    
-    <label class="text-sm text-gray-400 ml-auto">Sort by:</label>
+
     <select id="sortSelect" onchange="sortTickets()"
-            class="bg-surface-200 border border-surface-300 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue hover:bg-surface-300 transition-colors">
+            class="bg-surface-200 border border-surface-300 rounded-full px-5 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue hover:bg-surface-300 transition-colors">
         <option value="date-desc">Date (Newest First)</option>
         <option value="date-asc">Date (Oldest First)</option>
         <option value="project-asc">Project (A-Z)</option>
@@ -66,160 +101,11 @@
 
 <!-- Kanban Board -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-3 w-full" id="kanbanBoard">
-    <!-- Proposed Column -->
-    <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="proposed">
-        <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
-            <h2 class="font-semibold text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-accent-purple"></span>
-                {{ status_labels['proposed'] }}
-                <span class="text-gray-500 font-normal text-sm">({{ columns['proposed']|length }})</span>
-            </h2>
-        </div>
-        <div id="column-proposed" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="proposed">
-            {% for ticket in columns['proposed'] %}
-            <div class="ticket-card bg-surface-200 rounded-lg p-3 border border-surface-300 hover:border-surface-400 cursor-pointer transition-all"
-                 data-ticket-id="{{ ticket.id }}"
-                 data-project-id="{{ ticket.project_id }}"
-                 data-timestamp="{{ ticket.created_at.timestamp() }}"
-                 data-project-name="{{ ticket.project.name }}"
-                 style="border-left: 4px solid {{ project_colors[ticket.project_id] }}"
-                 onclick="editTicket({{ ticket.id }})">
-                <div class="mb-2 bg-surface-300 px-2 py-0.5 rounded flex items-center justify-between">
-                    <span class="project-badge flex items-center gap-1 text-xs text-gray-500">
-                        <span class="w-2 h-2 rounded-full" style="background-color: {{ project_colors[ticket.project_id] }}"></span>
-                        {{ ticket.project.name }}
-                    </span>
-                    <span class="text-xs text-gray-500">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
-                </div>
-                <h3 class="text-sm font-medium text-white mb-2 line-clamp-2">{{ ticket.title }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- To Do Column -->
-    <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="todo">
-        <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
-            <h2 class="font-semibold text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-accent-yellow"></span>
-                {{ status_labels['todo'] }}
-                <span class="text-gray-500 font-normal text-sm">({{ columns['todo']|length }})</span>
-            </h2>
-        </div>
-        <div id="column-todo" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="todo">
-            {% for ticket in columns['todo'] %}
-            <div class="ticket-card bg-surface-200 rounded-lg p-3 border border-surface-300 hover:border-surface-400 cursor-pointer transition-all"
-                 data-ticket-id="{{ ticket.id }}"
-                 data-project-id="{{ ticket.project_id }}"
-                 data-timestamp="{{ ticket.created_at.timestamp() }}"
-                 data-project-name="{{ ticket.project.name }}"
-                 style="border-left: 4px solid {{ project_colors[ticket.project_id] }}"
-                 onclick="editTicket({{ ticket.id }})">
-                <div class="mb-2 bg-surface-300 px-2 py-0.5 rounded flex items-center justify-between">
-                    <span class="project-badge flex items-center gap-1 text-xs text-gray-500">
-                        <span class="w-2 h-2 rounded-full" style="background-color: {{ project_colors[ticket.project_id] }}"></span>
-                        {{ ticket.project.name }}
-                    </span>
-                    <span class="text-xs text-gray-500">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
-                </div>
-                <h3 class="text-sm font-medium text-white mb-2 line-clamp-2">{{ ticket.title }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- In Progress Column -->
-    <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="in_progress">
-        <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
-            <h2 class="font-semibold text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-accent-blue"></span>
-                {{ status_labels['in_progress'] }}
-                <span class="text-gray-500 font-normal text-sm">({{ columns['in_progress']|length }})</span>
-            </h2>
-        </div>
-        <div id="column-in_progress" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="in_progress">
-            {% for ticket in columns['in_progress'] %}
-            <div class="ticket-card bg-surface-200 rounded-lg p-3 border border-surface-300 hover:border-surface-400 cursor-pointer transition-all"
-                 data-ticket-id="{{ ticket.id }}"
-                 data-project-id="{{ ticket.project_id }}"
-                 data-timestamp="{{ ticket.created_at.timestamp() }}"
-                 data-project-name="{{ ticket.project.name }}"
-                 style="border-left: 4px solid {{ project_colors[ticket.project_id] }}"
-                 onclick="editTicket({{ ticket.id }})">
-                <div class="mb-2 bg-surface-300 px-2 py-0.5 rounded flex items-center justify-between">
-                    <span class="project-badge flex items-center gap-1 text-xs text-gray-500">
-                        <span class="w-2 h-2 rounded-full" style="background-color: {{ project_colors[ticket.project_id] }}"></span>
-                        {{ ticket.project.name }}
-                    </span>
-                    <span class="text-xs text-gray-500">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
-                </div>
-                <h3 class="text-sm font-medium text-white mb-2 line-clamp-2">{{ ticket.title }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Done Column -->
-    <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="done">
-        <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
-            <h2 class="font-semibold text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-accent-green"></span>
-                {{ status_labels['done'] }}
-                <span class="text-gray-500 font-normal text-sm">({{ columns['done']|length }})</span>
-            </h2>
-        </div>
-        <div id="column-done" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="done">
-            {% for ticket in columns['done'] %}
-            <div class="ticket-card bg-surface-200 rounded-lg p-3 border border-surface-300 hover:border-surface-400 cursor-pointer transition-all"
-                 data-ticket-id="{{ ticket.id }}"
-                 data-project-id="{{ ticket.project_id }}"
-                 data-timestamp="{{ ticket.created_at.timestamp() }}"
-                 data-project-name="{{ ticket.project.name }}"
-                 style="border-left: 4px solid {{ project_colors[ticket.project_id] }}"
-                 onclick="editTicket({{ ticket.id }})">
-                <div class="mb-2 bg-surface-300 px-2 py-0.5 rounded flex items-center justify-between">
-                    <span class="project-badge flex items-center gap-1 text-xs text-gray-500">
-                        <span class="w-2 h-2 rounded-full" style="background-color: {{ project_colors[ticket.project_id] }}"></span>
-                        {{ ticket.project.name }}
-                    </span>
-                    <span class="text-xs text-gray-500">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
-                </div>
-                <h3 class="text-sm font-medium text-white mb-2 line-clamp-2">{{ ticket.title }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Won't Do Column -->
-    <div class="kanban-column-container bg-surface-100 rounded-xl border border-surface-300 overflow-hidden" data-column="wont_do">
-        <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
-            <h2 class="font-semibold text-white flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-gray-600"></span>
-                {{ status_labels['wont_do'] }}
-                <span class="text-gray-500 font-normal text-sm">({{ columns['wont_do']|length }})</span>
-            </h2>
-        </div>
-        <div id="column-wont_do" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="wont_do">
-            {% for ticket in columns['wont_do'] %}
-            <div class="ticket-card bg-surface-200/50 rounded-lg p-3 border border-surface-300/50 hover:border-surface-400 cursor-pointer opacity-60 hover:opacity-80 transition-all"
-                 data-ticket-id="{{ ticket.id }}"
-                 data-project-id="{{ ticket.project_id }}"
-                 data-timestamp="{{ ticket.created_at.timestamp() }}"
-                 data-project-name="{{ ticket.project.name }}"
-                 style="border-left: 4px solid {{ project_colors[ticket.project_id] }}"
-                 onclick="editTicket({{ ticket.id }})">
-                <div class="mb-2 bg-surface-300/50 px-2 py-0.5 rounded flex items-center justify-between">
-                    <span class="project-badge flex items-center gap-1 text-xs text-gray-600">
-                        <span class="w-2 h-2 rounded-full" style="background-color: {{ project_colors[ticket.project_id] }}"></span>
-                        {{ ticket.project.name }}
-                    </span>
-                    <span class="text-xs text-gray-600">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
-                </div>
-                <h3 class="text-sm font-medium text-gray-400 mb-2 line-clamp-2">{{ ticket.title }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    {{ render_column('proposed',    status_labels['proposed'],    columns['proposed'],    project_colors) }}
+    {{ render_column('todo',        status_labels['todo'],        columns['todo'],        project_colors) }}
+    {{ render_column('in_progress', status_labels['in_progress'], columns['in_progress'], project_colors) }}
+    {{ render_column('done',        status_labels['done'],        columns['done'],        project_colors) }}
+    {{ render_column('wont_do',     status_labels['wont_do'],     columns['wont_do'],     project_colors, muted=true) }}
 </div>
 
 <!-- Empty State -->
@@ -227,20 +113,20 @@
 <div class="text-center py-16">
     <div class="text-gray-500 mb-4">
         <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
     </div>
     <h3 class="text-lg font-medium text-gray-400 mb-2">No tickets yet</h3>
     <p class="text-gray-500 mb-6">Get started by creating your first ticket</p>
     {% if projects %}
-    <button onclick="openNewTicketModal()" 
+    <button onclick="openNewTicketModal()"
             class="bg-accent-blue hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg transition-colors">
         Create First Ticket
     </button>
     {% else %}
     <p class="text-gray-500 mb-4">But first, you need to create a project</p>
-    <button onclick="openNewProjectModal()" 
+    <button onclick="openNewProjectModal()"
             class="bg-accent-blue hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg transition-colors">
         Create First Project
     </button>
@@ -248,4 +134,3 @@
 </div>
 {% endif %}
 {% endblock %}
-

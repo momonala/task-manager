@@ -69,12 +69,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="openNewTicketModal()" 
-                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors">
+                    <button onclick="openNewTicketModal()"
+                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
                         + New Ticket
                     </button>
-                    <button onclick="openNewProjectModal()" 
-                            class="bg-accent-orange hover:opacity-90 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors">
+                    <button onclick="openNewProjectModal()"
+                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
                         + New Project
                     </button>
                     <button onclick="toggleSettingsPanel()" 
@@ -95,7 +95,7 @@
     </main>
 
     <!-- Ticket Modal -->
-    <div id="ticketModal" class="hidden fixed inset-0 z-50">
+    <div id="ticketModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-surface-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
@@ -120,7 +120,7 @@
                                 Title <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="ticketTitle" name="title" required
-                                   class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
                                    placeholder="Enter ticket title">
                         </div>
                         
@@ -130,7 +130,7 @@
                                 Project <span class="text-accent-red">*</span>
                             </label>
                             <select id="ticketProject" name="project_id" required
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
                                 <option value="">Select a project</option>
                                 {% for project in projects %}
                                 <option value="{{ project.id }}">{{ project.name }}</option>
@@ -142,7 +142,7 @@
                         <div id="statusField" class="hidden">
                             <label for="ticketStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
                             <select id="ticketStatus" name="status"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
                                 {% for status in statuses %}
                                 <option value="{{ status }}">{{ status_labels[status] }}</option>
                                 {% endfor %}
@@ -198,7 +198,7 @@
                                 Cancel
                             </button>
                             <button type="submit" 
-                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
                                 Save Ticket
                             </button>
                         </div>
@@ -209,7 +209,7 @@
     </div>
 
     <!-- Project Modal -->
-    <div id="projectModal" class="hidden fixed inset-0 z-50">
+    <div id="projectModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProjectModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-surface-100 rounded-2xl w-full max-w-lg shadow-2xl border border-surface-300">
@@ -233,7 +233,7 @@
                                 Name <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="projectName" name="name" required
-                                   class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
                                    placeholder="Project name">
                         </div>
                         
@@ -252,10 +252,10 @@
                             </label>
                             <div class="flex gap-2">
                                 <input type="text" id="projectLocalPath" name="local_path"
-                                       class="flex-1 bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                       class="flex-1 bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
                                        placeholder="/path/to/project (optional)">
                                 <button type="button" onclick="selectDirectory()"
-                                        class="bg-surface-300 hover:bg-surface-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
+                                        class="bg-surface-300 hover:bg-surface-400 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors whitespace-nowrap">
                                     Browse
                                 </button>
                             </div>
@@ -275,7 +275,7 @@
                                 Cancel
                             </button>
                             <button type="submit" 
-                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
                                 Save Project
                             </button>
                         </div>
@@ -286,13 +286,13 @@
     </div>
 
     <!-- Settings Panel -->
-    <div id="settingsPanel" class="hidden fixed inset-0 z-50">
+    <div id="settingsPanel" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="settingsPanelTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
         <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-surface-100 border-l border-surface-300 shadow-2xl overflow-y-auto" onclick="event.stopPropagation()">
             <div class="p-6">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-semibold text-white">Settings</h2>
+                    <h2 id="settingsPanelTitle" class="text-lg font-semibold text-white">Settings</h2>
                     <button onclick="toggleSettingsPanel()" class="text-gray-400 hover:text-white">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -335,11 +335,11 @@
                             <label class="block text-xs text-gray-400 mb-2">Default Project Filter</label>
                             <div class="flex gap-2">
                                 <button onclick="setDefaultProjectFilter('all')" 
-                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded transition-colors">
+                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
                                     All Projects
                                 </button>
                                 <button onclick="setDefaultProjectFilter('none')" 
-                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded transition-colors">
+                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
                                     No Projects
                                 </button>
                             </div>
@@ -348,7 +348,7 @@
                         <div>
                             <label for="defaultSortOrder" class="block text-xs text-gray-400 mb-2">Default Sort Order</label>
                             <select id="defaultSortOrder" onchange="saveDefaultSortOrder()"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
                                 <option value="date-desc">Date (Newest First)</option>
                                 <option value="date-asc">Date (Oldest First)</option>
                                 <option value="project-asc">Project (A-Z)</option>
@@ -359,7 +359,7 @@
                         <div>
                             <label for="dateRangeFilter" class="block text-xs text-gray-400 mb-2">Date Range Filter</label>
                             <select id="dateRangeFilter" onchange="applyDateRangeFilter()"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
                                 <option value="0">Show all tickets</option>
                                 <option value="1">Last 1 day</option>
                                 <option value="7">Last 7 days</option>
