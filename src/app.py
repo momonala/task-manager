@@ -1,6 +1,7 @@
 """Flask application entry point for the task management board."""
 
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from flask import Flask
@@ -85,7 +86,14 @@ def index():
 def projects_list():
     """Render the projects management page."""
     with get_session() as session:
-        projects = session.query(Project).order_by(Project.name).all()
+        projects = session.query(Project).all()
+
+        def last_activity(project: Project):
+            dates = [project.last_modified] if project.last_modified else []
+            dates.extend(t.updated_at for t in project.tickets if t.updated_at)
+            return max(dates) if dates else datetime.min
+
+        projects.sort(key=lambda p: (p.deprecated, -last_activity(p).timestamp()))
         return render_template("projects.html", projects=projects)
 
 
