@@ -64,13 +64,8 @@ def test_ticket_optional_fields(temp_db):
     """Test creating a ticket with optional fields."""
     with get_session() as session:
         project = _create_project(session)
-        ticket = _create_ticket(
-            session, project.id, description=None, acceptance_criteria=None, scope=None, prompt=None
-        )
+        ticket = _create_ticket(session, project.id, description=None)
         assert ticket.description is None
-        assert ticket.acceptance_criteria is None
-        assert ticket.scope is None
-        assert ticket.prompt is None
 
 
 def test_ticket_project_relationship(temp_db):

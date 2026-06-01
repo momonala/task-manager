@@ -191,10 +191,7 @@ Request body:
 {
   "title": "string (required)",
   "project_id": "integer (required)",
-  "description": "string (optional)",
-  "acceptance_criteria": "string (optional)",
-  "scope": "string (optional)",
-  "prompt": "string (optional)"
+  "description": "string (optional)"
 }
 ```
 
@@ -223,9 +220,6 @@ Ticket
 ├── description: Text (nullable)
 ├── project_id: Integer (FK → Project)
 ├── status: String(50) [proposed, todo, in_progress, done, wont_do]
-├── acceptance_criteria: Text (nullable)
-├── scope: Text (nullable)
-├── prompt: Text (nullable, for AI assistants like Cursor)
 ├── created_at: DateTime (auto)
 └── updated_at: DateTime (auto)
 ```

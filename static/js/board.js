@@ -267,9 +267,6 @@ async function editTicket(ticketId) {
         document.getElementById('ticketProject').value = ticket.project_id;
         document.getElementById('ticketStatus').value = ticket.status;
         document.getElementById('ticketDescription').value = ticket.description || '';
-        document.getElementById('ticketCriteria').value = ticket.acceptance_criteria || '';
-        document.getElementById('ticketScope').value = ticket.scope || '';
-        document.getElementById('ticketPrompt').value = ticket.prompt || '';
         document.getElementById('modalTitle').textContent = 'Edit Ticket';
         document.getElementById('statusField').classList.remove('hidden');
         document.getElementById('deleteTicketBtn').classList.remove('hidden');
@@ -304,9 +301,6 @@ async function saveTicket(event) {
         title: document.getElementById('ticketTitle').value,
         project_id: parseInt(document.getElementById('ticketProject').value),
         description: document.getElementById('ticketDescription').value || null,
-        acceptance_criteria: document.getElementById('ticketCriteria').value || null,
-        scope: document.getElementById('ticketScope').value || null,
-        prompt: document.getElementById('ticketPrompt').value || null,
     };
 
     if (!isNew) data.status = document.getElementById('ticketStatus').value;

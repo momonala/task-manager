@@ -12,9 +12,6 @@ def test_ticket_data():
         project_id=1,
         description="Test description",
         status=config.STATUS_TODO,
-        acceptance_criteria="Test criteria",
-        scope="Test scope",
-        prompt="Test prompt",
     )
     assert ticket.title == "Test Ticket"
     assert ticket.project_id == 1
@@ -26,7 +23,6 @@ def test_ticket_data_defaults():
     ticket = TicketData(title="Test", project_id=1)
     assert ticket.description is None
     assert ticket.status == config.STATUS_TODO
-    assert ticket.acceptance_criteria is None
 
 
 def test_project_data():

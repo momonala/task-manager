@@ -124,9 +124,6 @@ def create_ticket():
             title=title,
             project_id=project_id,
             description=data.get("description") or None,
-            acceptance_criteria=data.get("acceptance_criteria") or None,
-            scope=data.get("scope") or None,
-            prompt=data.get("prompt") or None,
         )
         session.add(ticket)
         session.flush()
@@ -151,9 +148,6 @@ def get_ticket(ticket_id: int):
                 "project_id": ticket.project_id,
                 "project_name": ticket.project.name,
                 "status": ticket.status,
-                "acceptance_criteria": ticket.acceptance_criteria,
-                "scope": ticket.scope,
-                "prompt": ticket.prompt,
                 "created_at": ticket.created_at.isoformat(),
                 "updated_at": ticket.updated_at.isoformat(),
             }
@@ -187,13 +181,6 @@ def update_ticket(ticket_id: int):
             if new_status not in config.VALID_STATUSES:
                 return jsonify({"error": f"Invalid status: {new_status}"}), 400
             ticket.status = new_status
-        if "acceptance_criteria" in data:
-            ticket.acceptance_criteria = data["acceptance_criteria"] or None
-        if "scope" in data:
-            ticket.scope = data["scope"] or None
-        if "prompt" in data:
-            ticket.prompt = data["prompt"] or None
-
         logger.info("📝 Updated ticket: %s", ticket.title)
         return jsonify({"status": "updated"})
 

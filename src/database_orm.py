@@ -54,9 +54,6 @@ class Ticket(Base):
     description: Mapped[str | None] = mapped_column(Text, default=None)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
     status: Mapped[str] = mapped_column(String(50), default="todo")
-    acceptance_criteria: Mapped[str | None] = mapped_column(Text, default=None)
-    scope: Mapped[str | None] = mapped_column(Text, default=None)
-    prompt: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),

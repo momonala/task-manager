@@ -13,9 +13,6 @@ class TicketData:
     project_id: int
     description: str | None = None
     status: str = config.STATUS_TODO
-    acceptance_criteria: str | None = None
-    scope: str | None = None
-    prompt: str | None = None
 
 
 @dataclass

@@ -174,7 +174,7 @@ def test_get_ticket(client, sample_ticket):
 
 def test_update_ticket(client, sample_ticket):
     """Test updating a ticket."""
-    data = {"title": "Updated", "status": "in_progress", "acceptance_criteria": "Test"}
+    data = {"title": "Updated", "status": "in_progress"}
     response = client.put(
         f"/api/tickets/{sample_ticket}", data=json.dumps(data), content_type="application/json"
     )
