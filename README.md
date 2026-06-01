@@ -173,6 +173,9 @@ task-manager/
 | `/api/tickets/<id>` | PUT | Update ticket |
 | `/api/tickets/<id>` | DELETE | Delete ticket |
 | `/api/tickets/<id>/status` | PATCH | Update ticket status (drag-drop) |
+| `/api/tickets/tid/<ticket_id>` | GET | Get ticket by human-readable ID |
+| `/api/tickets/tid/<ticket_id>` | PUT | Update ticket title/project/description by human-readable ID |
+| `/api/tickets/tid/<ticket_id>` | DELETE | Delete ticket by human-readable ID |
 | `/api/projects` | POST | Create new project |
 | `/api/projects/<id>` | GET | Get project details |
 | `/api/projects/<id>` | PUT | Update project |
@@ -193,6 +196,44 @@ Request body:
   "project_id": "integer (required)",
   "description": "string (optional)"
 }
+```
+
+Response includes the auto-generated `ticket_id` (first 8 chars of a UUID):
+```json
+{"id": 42, "status": "created"}
+```
+
+### GET /api/tickets/tid/\<ticket_id\>
+
+Fetch a ticket by its human-readable ID.
+
+```bash
+curl http://localhost:5010/api/tickets/tid/a3f9b2c1
+```
+
+### PUT /api/tickets/tid/\<ticket_id\>
+
+Update a ticket's title, project, and/or description in a single request. All fields are optional.
+
+```bash
+curl -X PUT http://localhost:5010/api/tickets/tid/a3f9b2c1 \
+  -H "Content-Type: application/json" \
+  -d '{"title": "New title", "project_id": 2, "description": "Updated desc"}'
+```
+
+Request body:
+```json
+{
+  "title": "string (optional)",
+  "project_id": "integer (optional)",
+  "description": "string (optional)"
+}
+```
+
+### DELETE /api/tickets/tid/\<ticket_id\>
+
+```bash
+curl -X DELETE http://localhost:5010/api/tickets/tid/a3f9b2c1
 ```
 
 ## Celebration Feature
@@ -216,6 +257,7 @@ Project
 
 Ticket
 ├── id: Integer (PK)
+├── ticket_id: String(8), unique (first 8 chars of UUID, auto-generated)
 ├── title: String(200)
 ├── description: Text (nullable)
 ├── project_id: Integer (FK → Project)

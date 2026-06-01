@@ -1,6 +1,7 @@
 """Flask application entry point for the task management board."""
 
 import logging
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -121,6 +122,7 @@ def create_ticket():
             return jsonify({"error": "Project not found"}), 404
 
         ticket = Ticket(
+            ticket_id=str(uuid.uuid4())[:8],
             title=title,
             project_id=project_id,
             description=data.get("description") or None,
@@ -143,6 +145,7 @@ def get_ticket(ticket_id: int):
         return jsonify(
             {
                 "id": ticket.id,
+                "ticket_id": ticket.ticket_id,
                 "title": ticket.title,
                 "description": ticket.description,
                 "project_id": ticket.project_id,
@@ -219,6 +222,72 @@ def delete_ticket(ticket_id: int):
     """Delete a ticket."""
     with get_session() as session:
         ticket = session.get(Ticket, ticket_id)
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        title = ticket.title
+        session.delete(ticket)
+        logger.info("🗑️ Deleted ticket: %s", title)
+        return jsonify({"status": "deleted"})
+
+
+# --- Ticket API (by ticket_id) ---
+
+
+@app.route("/api/tickets/tid/<ticket_id>", methods=["GET"])
+def get_ticket_by_tid(ticket_id: str):
+    """Get a ticket by its human-readable ticket_id."""
+    with get_session() as session:
+        ticket = session.query(Ticket).filter_by(ticket_id=ticket_id).first()
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        return jsonify(
+            {
+                "id": ticket.id,
+                "ticket_id": ticket.ticket_id,
+                "title": ticket.title,
+                "description": ticket.description,
+                "project_id": ticket.project_id,
+                "project_name": ticket.project.name,
+                "status": ticket.status,
+                "created_at": ticket.created_at.isoformat(),
+                "updated_at": ticket.updated_at.isoformat(),
+            }
+        )
+
+
+@app.route("/api/tickets/tid/<ticket_id>", methods=["PUT"])
+def update_ticket_by_tid(ticket_id: str):
+    """Update a ticket's title, project, and description by its ticket_id."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    with get_session() as session:
+        ticket = session.query(Ticket).filter_by(ticket_id=ticket_id).first()
+        if not ticket:
+            return jsonify({"error": "Ticket not found"}), 404
+
+        if "title" in data:
+            ticket.title = data["title"].strip()
+        if "description" in data:
+            ticket.description = data["description"] or None
+        if "project_id" in data:
+            project = session.get(Project, data["project_id"])
+            if not project:
+                return jsonify({"error": "Project not found"}), 404
+            ticket.project_id = data["project_id"]
+
+        logger.info("📝 Updated ticket: %s", ticket.title)
+        return jsonify({"status": "updated"})
+
+
+@app.route("/api/tickets/tid/<ticket_id>", methods=["DELETE"])
+def delete_ticket_by_tid(ticket_id: str):
+    """Delete a ticket by its ticket_id."""
+    with get_session() as session:
+        ticket = session.query(Ticket).filter_by(ticket_id=ticket_id).first()
         if not ticket:
             return jsonify({"error": "Ticket not found"}), 404
 

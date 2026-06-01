@@ -245,6 +245,7 @@ function openNewTicketModal() {
     document.getElementById('ticketForm').reset();
     document.getElementById('ticketId').value = '';
     document.getElementById('modalTitle').textContent = 'New Ticket';
+    document.getElementById('ticketIdBadge').classList.add('hidden');
     document.getElementById('statusField').classList.add('hidden');
     document.getElementById('deleteTicketBtn').classList.add('hidden');
 
@@ -268,6 +269,9 @@ async function editTicket(ticketId) {
         document.getElementById('ticketStatus').value = ticket.status;
         document.getElementById('ticketDescription').value = ticket.description || '';
         document.getElementById('modalTitle').textContent = 'Edit Ticket';
+        const badge = document.getElementById('ticketIdBadge');
+        badge.textContent = ticket.ticket_id;
+        badge.classList.remove('hidden');
         document.getElementById('statusField').classList.remove('hidden');
         document.getElementById('deleteTicketBtn').classList.remove('hidden');
 

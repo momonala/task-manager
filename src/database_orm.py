@@ -50,6 +50,7 @@ class Ticket(Base):
     __tablename__ = "tickets"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[str] = mapped_column(String(8), unique=True)
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))

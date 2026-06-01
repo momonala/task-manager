@@ -1,5 +1,7 @@
 """Tests for database ORM models."""
 
+import uuid
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 
@@ -19,6 +21,7 @@ def _create_project(session, name="Test Project", description="Test", local_path
 
 def _create_ticket(session, project_id, title="Test Ticket", **kwargs):
     """Helper to create a ticket."""
+    kwargs.setdefault("ticket_id", str(uuid.uuid4())[:8])
     ticket = Ticket(title=title, project_id=project_id, **kwargs)
     session.add(ticket)
     session.flush()
@@ -98,7 +101,11 @@ def test_ticket_cascade_delete(temp_db):
     "model_class,args,expected_repr",
     [
         (Project, {"name": "Repr Test", "description": "Test"}, "<Project 'Repr Test'>"),
-        (Ticket, {"title": "Repr Ticket", "status": "in_progress"}, "<Ticket 'Repr Ticket' (in_progress)>"),
+        (
+            Ticket,
+            {"ticket_id": "abcd1234", "title": "Repr Ticket", "status": "in_progress"},
+            "<Ticket 'Repr Ticket' (in_progress)>",
+        ),
     ],
 )
 def test_model_repr(temp_db, model_class, args, expected_repr):

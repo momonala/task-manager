@@ -104,7 +104,10 @@
                     
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
-                        <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
+                        <div class="flex items-center gap-3">
+                            <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
+                            <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-500 bg-surface-300 px-2 py-0.5 rounded"></span>
+                        </div>
                         <button type="button" onclick="closeTicketModal()" class="text-gray-400 hover:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

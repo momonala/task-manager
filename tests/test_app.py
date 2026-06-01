@@ -1,6 +1,7 @@
 """Tests for Flask application routes and API endpoints."""
 
 import json
+import uuid
 
 import pytest
 
@@ -42,7 +43,7 @@ def sample_project(temp_db):
 def sample_ticket(sample_project):
     """Create a sample ticket for testing."""
     with get_session() as session:
-        ticket = Ticket(title="Test Ticket", project_id=sample_project)
+        ticket = Ticket(ticket_id=str(uuid.uuid4())[:8], title="Test Ticket", project_id=sample_project)
         session.add(ticket)
         session.flush()
         return ticket.id
@@ -50,6 +51,8 @@ def sample_ticket(sample_project):
 
 def _create_resource(session, model, **kwargs):
     """Helper to create a resource in the database."""
+    if model is Ticket:
+        kwargs.setdefault("ticket_id", str(uuid.uuid4())[:8])
     resource = model(**kwargs)
     session.add(resource)
     session.flush()
