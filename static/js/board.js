@@ -25,10 +25,17 @@ let _projectModalPrevFocus = null;
 let _settingsPrevFocus = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    const bgVideo = document.getElementById('bgVideo');
+    if (bgVideo) bgVideo.playbackRate = 0.5;
+
     initializeSortable();
     loadColumnVisibility();
     loadDefaultFilterPreferences();
     sortTickets();
+
+    const hideDeprecatedToggle = document.getElementById('toggle-hide-deprecated');
+    if (hideDeprecatedToggle) hideDeprecatedToggle.checked = loadHideDeprecatedSetting();
+    applyHideDeprecatedToProjects();
 
     const searchInput = document.getElementById('projectSearch');
     const dropdown = document.getElementById('projectFilterDropdown');
@@ -55,7 +62,7 @@ document.addEventListener('keydown', (event) => {
         closeTicketModal();
         closeProjectModal();
         const settingsPanel = document.getElementById('settingsPanel');
-        if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
+        if (settingsPanel && settingsPanel.classList.contains('open')) {
             toggleSettingsPanel();
         }
     }
@@ -175,14 +182,14 @@ function applyAllFilters() {
     const dateRangeSelect = document.getElementById('dateRangeFilter');
     const days = dateRangeSelect ? parseInt(dateRangeSelect.value) || 0 : 0;
     const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : null;
+    const hideDeprecated = loadHideDeprecatedSetting();
 
     document.querySelectorAll('.ticket-card').forEach(card => {
         const projectId = card.dataset.projectId;
         const isDeprecated = card.dataset.deprecated === 'true';
         const ticketDate = new Date(parseFloat(card.dataset.timestamp || 0) * 1000);
         const dateOk = !cutoffDate || ticketDate >= cutoffDate;
-        // Deprecated tickets bypass the project filter but still respect date range
-        const visible = isDeprecated ? dateOk : (selectedProjects.has(projectId) && dateOk);
+        const visible = isDeprecated ? (!hideDeprecated && dateOk) : (selectedProjects.has(projectId) && dateOk);
         card.classList.toggle('hidden-by-filter', !visible);
     });
 
@@ -526,16 +533,21 @@ function toggleSettingsPanel() {
     const panel = document.getElementById('settingsPanel');
     if (!panel) return;
 
-    const isHidden = panel.classList.contains('hidden');
-
-    if (isHidden) {
+    if (panel.classList.contains('hidden')) {
         _settingsPrevFocus = document.activeElement;
         panel.classList.remove('hidden');
-        panel.querySelector('input, select, textarea, button')?.focus();
+        // Double rAF ensures the element is painted before the transition starts
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            panel.classList.add('open');
+            panel.querySelector('input, select, textarea, button')?.focus();
+        }));
     } else {
-        panel.classList.add('hidden');
-        _settingsPrevFocus?.focus();
-        _settingsPrevFocus = null;
+        panel.classList.remove('open');
+        panel.addEventListener('transitionend', () => {
+            panel.classList.add('hidden');
+            _settingsPrevFocus?.focus();
+            _settingsPrevFocus = null;
+        }, { once: true });
     }
 }
 
@@ -557,20 +569,25 @@ function saveColumnVisibility() {
 
 function loadColumnVisibility() {
     const saved = localStorage.getItem('columnVisibility');
-    if (!saved) return;
-
-    try {
-        const visibility = JSON.parse(saved);
-        document.querySelectorAll('.column-toggle').forEach(checkbox => {
-            const column = checkbox.dataset.column;
-            if (Object.prototype.hasOwnProperty.call(visibility, column)) {
-                checkbox.checked = visibility[column];
-                toggleColumnVisibility(column, visibility[column]);
-            }
-        });
-    } catch (e) {
-        console.error('Error loading column visibility:', e);
+    let visibility;
+    if (saved) {
+        try {
+            visibility = JSON.parse(saved);
+        } catch (e) {
+            console.error('Error loading column visibility:', e);
+            return;
+        }
+    } else {
+        visibility = { proposed: false, todo: true, in_progress: true, done: true, wont_do: false };
     }
+
+    document.querySelectorAll('.column-toggle').forEach(checkbox => {
+        const column = checkbox.dataset.column;
+        if (Object.prototype.hasOwnProperty.call(visibility, column)) {
+            checkbox.checked = visibility[column];
+            toggleColumnVisibility(column, visibility[column]);
+        }
+    });
 }
 
 function updateGridLayout() {
@@ -655,6 +672,27 @@ function saveDefaultSortOrder() {
         mainSortSelect.value = sortSelect.value;
         sortTickets();
     }
+}
+
+// --- Hide Deprecated ---
+
+function loadHideDeprecatedSetting() {
+    const saved = localStorage.getItem('hideDeprecated');
+    return saved === null ? true : saved === 'true';
+}
+
+function toggleHideDeprecated(checked) {
+    localStorage.setItem('hideDeprecated', checked.toString());
+    applyAllFilters();
+    applyHideDeprecatedToProjects();
+}
+
+function applyHideDeprecatedToProjects() {
+    const hide = loadHideDeprecatedSetting();
+    document.querySelectorAll('[data-deprecated="true"]').forEach(card => {
+        if (card.classList.contains('ticket-card')) return;
+        card.classList.toggle('hidden', hide);
+    });
 }
 
 // --- Toast Notifications ---

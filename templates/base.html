@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Task Board{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -30,8 +33,14 @@
                             yellow: '#ffd60a',
                         }
                     },
+                    borderRadius: {
+                        none: '0px',
+                        sm:   'var(--radius)',
+                        DEFAULT: 'var(--radius)',
+                        full: '9999px',
+                    },
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Inter', 'sans-serif'],
                         mono: ['SF Mono', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
                     }
                 }
@@ -48,9 +57,14 @@
     <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="bg-black text-gray-100 min-h-screen">
+<body class="text-gray-100 min-h-screen">
+    <!-- Background video — swap src for any free MP4 from Pexels/Coverr/Mixkit -->
+    <video id="bgVideo" autoplay muted loop playsinline
+           style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:0.35;pointer-events:none;">
+        <source src="{{ url_for('static', filename='abstract-background.webm') }}" type="video/webm">
+    </video>
     <!-- Navigation -->
-    <nav class="bg-surface-100 border-b border-surface-300 sticky top-0 z-50">
+    <nav class="bg-surface-100/10 backdrop-blur-sm border-b border-surface-300 sticky top-0 z-50">
         <div class="w-full px-2 sm:px-4">
             <div class="flex items-center justify-between h-14">
                 <div class="flex items-center gap-6">
@@ -70,12 +84,18 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="openNewTicketModal()"
-                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
-                        + New Ticket
+                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16M4 12h16"/>
+                        </svg>
+                        New Ticket
                     </button>
                     <button onclick="openNewProjectModal()"
-                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
-                        + New Project
+                            class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16M4 12h16"/>
+                        </svg>
+                        New Project
                     </button>
                     <button onclick="toggleSettingsPanel()" 
                             class="text-gray-400 hover:text-white p-2 transition-colors"
@@ -98,7 +118,7 @@
     <div id="ticketModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-surface-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
+            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
                 <form id="ticketForm" onsubmit="saveTicket(event)">
                     <input type="hidden" id="ticketId" name="ticketId">
                     
@@ -106,7 +126,7 @@
                     <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
                         <div class="flex items-center gap-3">
                             <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
-                            <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-500 bg-surface-300 px-2 py-0.5 rounded"></span>
+                            <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-sm"></span>
                         </div>
                         <button type="button" onclick="closeTicketModal()" class="text-gray-400 hover:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +143,7 @@
                                 Title <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="ticketTitle" name="title" required
-                                   class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   class="form-field w-full py-2"
                                    placeholder="Enter ticket title">
                         </div>
                         
@@ -133,7 +153,7 @@
                                 Project <span class="text-accent-red">*</span>
                             </label>
                             <select id="ticketProject" name="project_id" required
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                    class="form-field w-full py-2">
                                 <option value="">Select a project</option>
                                 {% for project in projects if not project.deprecated %}
                                 <option value="{{ project.id }}">{{ project.name }}</option>
@@ -145,7 +165,7 @@
                         <div id="statusField" class="hidden">
                             <label for="ticketStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
                             <select id="ticketStatus" name="status"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                                    class="form-field w-full py-2">
                                 {% for status in statuses %}
                                 <option value="{{ status }}">{{ status_labels[status] }}</option>
                                 {% endfor %}
@@ -156,15 +176,15 @@
                         <div>
                             <label for="ticketDescription" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
                             <textarea id="ticketDescription" name="description" rows="3"
-                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
-                                      placeholder="Will be generated by AI"></textarea>
+                                      class="form-field w-full py-2 resize-none"
+                                      placeholder="Fix yo shit!"></textarea>
                             <!-- TODO: Add AI generation button here -->
                         </div>
                         
                     </div>
                     
                     <!-- Modal Footer -->
-                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-surface-200">
+                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-white/5">
                         <button type="button" id="deleteTicketBtn" onclick="deleteCurrentTicket()" 
                                 class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
                             Delete Ticket
@@ -189,7 +209,7 @@
     <div id="projectModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProjectModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-surface-100 rounded-2xl w-full max-w-lg shadow-2xl border border-surface-300">
+            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-lg shadow-2xl border border-surface-300">
                 <form id="projectForm" onsubmit="saveProject(event)">
                     <input type="hidden" id="projectId" name="projectId">
                     
@@ -210,7 +230,7 @@
                                 Name <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="projectName" name="name" required
-                                   class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                   class="form-field w-full py-2"
                                    placeholder="Project name">
                         </div>
                         
@@ -219,7 +239,7 @@
                                 Description <span class="text-accent-red">*</span>
                             </label>
                             <textarea id="projectDescription" name="description" rows="3" required
-                                      class="w-full bg-surface-200 border border-surface-300 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent resize-none"
+                                      class="form-field w-full py-2 resize-none"
                                       placeholder="What is this project about?"></textarea>
                         </div>
                         
@@ -229,10 +249,10 @@
                             </label>
                             <div class="flex gap-2">
                                 <input type="text" id="projectLocalPath" name="local_path"
-                                       class="flex-1 bg-surface-200 border border-surface-300 rounded-full px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent"
+                                       class="form-field flex-1 py-2"
                                        placeholder="/path/to/project (optional)">
                                 <button type="button" onclick="selectDirectory()"
-                                        class="bg-surface-300 hover:bg-surface-400 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors whitespace-nowrap">
+                                        class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors whitespace-nowrap">
                                     Browse
                                 </button>
                             </div>
@@ -249,7 +269,7 @@
                     </div>
                     
                     <!-- Modal Footer -->
-                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-surface-200">
+                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-white/5">
                         <button type="button" id="deleteProjectBtn" onclick="deleteCurrentProject()" 
                                 class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
                             Delete Project
@@ -273,7 +293,7 @@
     <!-- Settings Panel -->
     <div id="settingsPanel" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="settingsPanelTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
-        <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-surface-100 border-l border-surface-300 shadow-2xl overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-white/5 backdrop-blur-md border-l border-surface-300 shadow-2xl overflow-y-auto" onclick="event.stopPropagation()">
             <div class="p-6">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6">
@@ -285,6 +305,17 @@
                     </button>
                 </div>
                 
+                <!-- View Options -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-300 mb-3">View Options</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="toggle-hide-deprecated" checked onchange="toggleHideDeprecated(this.checked)">
+                            <span class="text-sm text-white">Hide deprecated projects</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Column Visibility -->
                 <div class="mb-6">
                     <h3 class="text-sm font-medium text-gray-300 mb-3">Column Visibility</h3>
@@ -320,11 +351,11 @@
                             <label class="block text-xs text-gray-400 mb-2">Default Project Filter</label>
                             <div class="flex gap-2">
                                 <button onclick="setDefaultProjectFilter('all')" 
-                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
+                                        class="flex-1 text-xs bg-white/10 hover:bg-white/20 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
                                     All Projects
                                 </button>
                                 <button onclick="setDefaultProjectFilter('none')" 
-                                        class="flex-1 text-xs bg-surface-200 hover:bg-surface-300 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
+                                        class="flex-1 text-xs bg-white/10 hover:bg-white/20 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
                                     No Projects
                                 </button>
                             </div>
@@ -333,7 +364,7 @@
                         <div>
                             <label for="defaultSortOrder" class="block text-xs text-gray-400 mb-2">Default Sort Order</label>
                             <select id="defaultSortOrder" onchange="saveDefaultSortOrder()"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                    class="form-field w-full py-1.5 text-sm">
                                 <option value="date-desc">Date (Newest First)</option>
                                 <option value="date-asc">Date (Oldest First)</option>
                                 <option value="project-asc">Project (A-Z)</option>
@@ -344,7 +375,7 @@
                         <div>
                             <label for="dateRangeFilter" class="block text-xs text-gray-400 mb-2">Date Range Filter</label>
                             <select id="dateRangeFilter" onchange="applyDateRangeFilter()"
-                                    class="w-full bg-surface-200 border border-surface-300 rounded-full px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-blue">
+                                    class="form-field w-full py-1.5 text-sm">
                                 <option value="0">Show all tickets</option>
                                 <option value="1">Last 1 day</option>
                                 <option value="7">Last 7 days</option>
