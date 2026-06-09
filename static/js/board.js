@@ -284,13 +284,23 @@ async function editTicket(ticketId) {
         document.getElementById('ticketTitle').value = ticket.title;
         document.getElementById('ticketProject').value = ticket.project_id;
         document.getElementById('ticketStatus').value = ticket.status;
-        document.getElementById('ticketDescription').value = ticket.description || '';
+        const descValue = ticket.description || '';
+        document.getElementById('ticketDescription').value = descValue;
         document.getElementById('modalTitle').textContent = 'Edit Ticket';
         const badge = document.getElementById('ticketIdBadge');
         badge.textContent = ticket.ticket_id;
         badge.classList.remove('hidden');
         document.getElementById('statusField').classList.remove('hidden');
         document.getElementById('deleteTicketBtn').classList.remove('hidden');
+
+        // open in markdown preview mode by default
+        if (descValue.trim()) {
+            const preview = document.getElementById('descPreview');
+            preview.innerHTML = marked.parse(descValue);
+            preview.classList.remove('hidden');
+            document.getElementById('ticketDescription').classList.add('hidden');
+            document.getElementById('descToggleBtn').textContent = 'Edit';
+        }
 
         _ticketModalPrevFocus = document.activeElement;
         modal.classList.remove('hidden');
@@ -305,6 +315,27 @@ function closeTicketModal() {
     document.getElementById('ticketModal').classList.add('hidden');
     _ticketModalPrevFocus?.focus();
     _ticketModalPrevFocus = null;
+    // reset description to edit mode
+    document.getElementById('ticketDescription').classList.remove('hidden');
+    document.getElementById('descPreview').classList.add('hidden');
+    document.getElementById('descToggleBtn').textContent = 'Preview';
+}
+
+function toggleDescriptionPreview() {
+    const textarea = document.getElementById('ticketDescription');
+    const preview = document.getElementById('descPreview');
+    const btn = document.getElementById('descToggleBtn');
+    const isEditing = !textarea.classList.contains('hidden');
+    if (isEditing) {
+        preview.innerHTML = marked.parse(textarea.value || '');
+        preview.classList.remove('hidden');
+        textarea.classList.add('hidden');
+        btn.textContent = 'Edit';
+    } else {
+        textarea.classList.remove('hidden');
+        preview.classList.add('hidden');
+        btn.textContent = 'Preview';
+    }
 }
 
 async function saveTicket(event) {

@@ -8,7 +8,7 @@
 {% set card_extra = ' opacity-60 hover:opacity-80' if is_muted else '' %}
 {% set badge_opacity = '20%' if is_muted else '50%' %}
 {% set title_color = 'text-gray-400' if is_muted else 'text-white' %}
-<div class="ticket-card bg-white/5 rounded-sm overflow-hidden border {{ card_border }} hover:border-surface-400 cursor-pointer transition-all{{ card_extra }}"
+<div class="ticket-card bg-white/10 rounded-sm overflow-hidden border {{ card_border }} hover:border-surface-400 cursor-pointer transition-all{{ card_extra }}"
      data-ticket-id="{{ ticket.id }}"
      data-project-id="{{ ticket.project_id }}"
      data-timestamp="{{ ticket.created_at.timestamp() }}"

@@ -317,3 +317,21 @@ textarea:focus {
     from { opacity: 1; transform: translateX(0); }
     to   { opacity: 0; transform: translateX(100%); }
 }
+
+/* Markdown description preview */
+.desc-preview { color: #d1d5db; line-height: 1.6; }
+.desc-preview h1, .desc-preview h2, .desc-preview h3 { color: #f9fafb; font-weight: 600; margin: 0.75rem 0 0.25rem; }
+.desc-preview h1 { font-size: 1.25rem; }
+.desc-preview h2 { font-size: 1.1rem; }
+.desc-preview h3 { font-size: 1rem; }
+.desc-preview p { margin: 0.5rem 0; }
+.desc-preview ul, .desc-preview ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+.desc-preview li { margin: 0.2rem 0; }
+.desc-preview ul { list-style-type: disc; }
+.desc-preview ol { list-style-type: decimal; }
+.desc-preview code { background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85em; }
+.desc-preview pre { background: rgba(255,255,255,0.07); padding: 0.75rem; border-radius: 4px; overflow-x: auto; margin: 0.5rem 0; }
+.desc-preview pre code { background: none; padding: 0; }
+.desc-preview a { color: #60a5fa; text-decoration: underline; }
+.desc-preview blockquote { border-left: 3px solid #4b5563; padding-left: 0.75rem; color: #9ca3af; margin: 0.5rem 0; }
+.desc-preview hr { border-color: #374151; margin: 0.75rem 0; }

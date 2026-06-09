@@ -53,6 +53,9 @@
     
     <!-- Canvas Confetti for celebrations -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
     
     <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -141,12 +144,12 @@
     <div id="ticketModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
         <div class="absolute inset-0 flex items-start justify-center px-4 pb-4 pt-8">
-            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
-                <form id="ticketForm" onsubmit="saveTicket(event)">
+            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300 flex flex-col">
+                <form id="ticketForm" onsubmit="saveTicket(event)" class="flex flex-col min-h-0 flex-1">
                     <input type="hidden" id="ticketId" name="ticketId">
-                    
+
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300 flex-shrink-0">
                         <div class="flex items-center gap-3">
                             <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
                             <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-sm"></span>
@@ -159,7 +162,7 @@
                     </div>
                     
                     <!-- Modal Body -->
-                    <div class="px-6 py-4 space-y-4 overflow-y-auto max-h-[85vh]">
+                    <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
                         <!-- Title -->
                         <div>
                             <label for="ticketTitle" class="block text-sm font-medium text-gray-300 mb-1">
@@ -197,17 +200,22 @@
                         
                         <!-- Description -->
                         <div>
-                            <label for="ticketDescription" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="ticketDescription" class="block text-sm font-medium text-gray-300">Description</label>
+                                <button type="button" id="descToggleBtn" onclick="toggleDescriptionPreview()"
+                                        class="text-xs text-gray-400 hover:text-white transition-colors">Preview</button>
+                            </div>
                             <textarea id="ticketDescription" name="description" rows="12"
                                       class="form-field w-full py-2 resize-y"
                                       placeholder="Fix yo shit!"></textarea>
+                            <div id="descPreview" class="hidden desc-preview form-field w-full py-2 min-h-[16rem] max-h-[24rem] overflow-y-auto"></div>
                             <!-- TODO: Add AI generation button here -->
                         </div>
                         
                     </div>
                     
                     <!-- Modal Footer -->
-                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-white/5">
+                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-white/5 flex-shrink-0">
                         <button type="button" id="deleteTicketBtn" onclick="deleteCurrentTicket()" 
                                 class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
                             Delete Ticket
