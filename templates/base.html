@@ -140,8 +140,8 @@
     <!-- Ticket Modal -->
     <div id="ticketModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
+        <div class="absolute inset-0 flex items-start justify-center px-4 pb-4 pt-8">
+            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300">
                 <form id="ticketForm" onsubmit="saveTicket(event)">
                     <input type="hidden" id="ticketId" name="ticketId">
                     
@@ -159,7 +159,7 @@
                     </div>
                     
                     <!-- Modal Body -->
-                    <div class="px-6 py-4 space-y-4 overflow-y-auto max-h-[60vh]">
+                    <div class="px-6 py-4 space-y-4 overflow-y-auto max-h-[85vh]">
                         <!-- Title -->
                         <div>
                             <label for="ticketTitle" class="block text-sm font-medium text-gray-300 mb-1">
@@ -198,8 +198,8 @@
                         <!-- Description -->
                         <div>
                             <label for="ticketDescription" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                            <textarea id="ticketDescription" name="description" rows="3"
-                                      class="form-field w-full py-2 resize-none"
+                            <textarea id="ticketDescription" name="description" rows="12"
+                                      class="form-field w-full py-2 resize-y"
                                       placeholder="Fix yo shit!"></textarea>
                             <!-- TODO: Add AI generation button here -->
                         </div>
