@@ -23,6 +23,8 @@ const TOAST_ICON_PATHS = {
 let _ticketModalPrevFocus = null;
 let _projectModalPrevFocus = null;
 let _settingsPrevFocus = null;
+let _ticketsPopoutAnchor = null;
+let _projectTicketsData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const bgVideo = document.getElementById('bgVideo');
@@ -55,10 +57,18 @@ document.addEventListener('click', (event) => {
         !clearBtn.contains(event.target)) {
         dropdown.classList.add('hidden');
     }
+
+    const popout = document.getElementById('projectTicketsPopout');
+    if (popout && !popout.classList.contains('hidden') &&
+        !popout.contains(event.target) &&
+        !event.target.closest('.project-tickets-trigger')) {
+        closeProjectTicketsPopout();
+    }
 });
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+        closeProjectTicketsPopout();
         closeTicketModal();
         closeProjectModal();
         const settingsPanel = document.getElementById('settingsPanel');
@@ -355,6 +365,144 @@ async function deleteCurrentTicket() {
         console.error('Error deleting ticket:', error);
         showErrorToast('Failed to delete ticket');
     }
+}
+
+// --- Project tickets popout ---
+
+function getProjectTicketsData() {
+    if (_projectTicketsData) return _projectTicketsData;
+    const el = document.getElementById('project-tickets-data');
+    if (!el) return null;
+    _projectTicketsData = JSON.parse(el.textContent);
+    return _projectTicketsData;
+}
+
+function toggleProjectTicketsPopout(projectId, anchorEl) {
+    const popout = document.getElementById('projectTicketsPopout');
+    if (!popout) return;
+
+    const projectKey = String(projectId);
+    if (popout.dataset.projectId === projectKey && !popout.classList.contains('hidden')) {
+        closeProjectTicketsPopout();
+        return;
+    }
+
+    openProjectTicketsPopout(projectId, anchorEl);
+}
+
+function openProjectTicketsPopout(projectId, anchorEl) {
+    const popout = document.getElementById('projectTicketsPopout');
+    const data = getProjectTicketsData();
+    if (!popout || !data) return;
+
+    const project = data[String(projectId)];
+    if (!project) return;
+
+    renderProjectTicketsList(project);
+
+    if (_ticketsPopoutAnchor) {
+        _ticketsPopoutAnchor.setAttribute('aria-expanded', 'false');
+    }
+
+    popout.dataset.projectId = String(projectId);
+    _ticketsPopoutAnchor = anchorEl;
+    anchorEl.setAttribute('aria-expanded', 'true');
+
+    popout.classList.remove('hidden');
+    positionProjectTicketsPopout(popout, anchorEl);
+    document.getElementById('projectTicketsPopoutClose')?.focus();
+}
+
+function closeProjectTicketsPopout() {
+    const popout = document.getElementById('projectTicketsPopout');
+    if (!popout || popout.classList.contains('hidden')) return;
+
+    popout.classList.add('hidden');
+    delete popout.dataset.projectId;
+    if (_ticketsPopoutAnchor) {
+        _ticketsPopoutAnchor.setAttribute('aria-expanded', 'false');
+        _ticketsPopoutAnchor.focus();
+    }
+    _ticketsPopoutAnchor = null;
+}
+
+function positionProjectTicketsPopout(popout, anchorEl) {
+    const margin = 6;
+    const rect = anchorEl.getBoundingClientRect();
+    const popoutWidth = popout.offsetWidth;
+    const popoutHeight = popout.offsetHeight;
+
+    let top = rect.bottom + margin;
+    let left = rect.right - popoutWidth;
+
+    if (left < 8) left = 8;
+    if (left + popoutWidth > window.innerWidth - 8) {
+        left = window.innerWidth - popoutWidth - 8;
+    }
+    if (top + popoutHeight > window.innerHeight - 8) {
+        top = rect.top - popoutHeight - margin;
+    }
+
+    popout.style.top = `${top}px`;
+    popout.style.left = `${left}px`;
+}
+
+function renderProjectTicketsList(project) {
+    const list = document.getElementById('projectTicketsPopoutList');
+    if (!list) return;
+
+    list.replaceChildren();
+
+    if (project.tickets.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'px-3 py-6 text-center text-sm text-gray-500';
+        empty.textContent = 'No tickets yet';
+        list.appendChild(empty);
+        return;
+    }
+
+    for (const ticket of project.tickets) {
+        list.appendChild(createProjectTicketListItem(ticket));
+    }
+}
+
+function createProjectTicketListItem(ticket) {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'w-full text-left px-3 py-2.5 hover:bg-white/5 transition-colors';
+    button.setAttribute('role', 'option');
+    button.addEventListener('click', () => {
+        closeProjectTicketsPopout();
+        editTicket(ticket.id);
+    });
+
+    const statusColor = STATUS_COLORS[ticket.status] || '#9ca3af';
+    const status = document.createElement('span');
+    status.className = 'text-[11px] font-medium px-1.5 py-0.5 rounded-sm flex-shrink-0';
+    status.style.color = statusColor;
+    status.style.backgroundColor = `color-mix(in srgb, ${statusColor} 15%, transparent)`;
+    status.textContent = STATUS_LABELS[ticket.status] || ticket.status;
+
+    const ticketTitle = document.createElement('p');
+    ticketTitle.className = 'text-sm text-white leading-snug line-clamp-2';
+    ticketTitle.textContent = ticket.title;
+
+    const ticketIdEl = document.createElement('p');
+    ticketIdEl.className = 'text-[11px] font-mono text-gray-500 mt-0.5';
+    ticketIdEl.textContent = ticket.ticket_id;
+
+    const main = document.createElement('div');
+    main.className = 'min-w-0 flex-1';
+    main.append(ticketTitle, ticketIdEl);
+
+    const row = document.createElement('div');
+    row.className = 'flex items-start justify-between gap-2';
+    row.append(main, status);
+
+    button.append(row);
+    item.append(button);
+    return item;
 }
 
 // --- Project Modal ---

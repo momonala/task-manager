@@ -22,13 +22,19 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0 rounded-sm bg-white/5 p-0.5">
-                <span class="text-xs text-gray-400 tabular-nums px-2 py-1 whitespace-nowrap">
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="button"
+                        class="project-tickets-trigger text-xs text-gray-500 tabular-nums whitespace-nowrap hover:text-gray-300 hover:bg-white/5 rounded-sm px-1 py-0.5 -my-0.5 transition-colors"
+                        onclick="toggleProjectTicketsPopout({{ project.id }}, this)"
+                        aria-expanded="false"
+                        aria-controls="projectTicketsPopout"
+                        aria-label="View {{ ticket_count }} ticket{{ 's' if ticket_count != 1 else '' }} for {{ project.name }}">
                     {{ ticket_count }} ticket{{ 's' if ticket_count != 1 else '' }}
-                </span>
+                </button>
+                <span class="w-px h-3.5 bg-surface-400" aria-hidden="true"></span>
                 <button type="button"
                         onclick="editProject({{ project.id }})"
-                        class="text-gray-400 hover:text-white hover:bg-white/10 rounded-sm p-1.5 transition-colors"
+                        class="text-gray-400 hover:text-white hover:bg-white/10 rounded-sm p-1 transition-colors"
                         title="Edit project"
                         aria-label="Edit {{ project.name }}">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -42,6 +48,32 @@
     </article>
     {% endfor %}
 </div>
+
+<div id="projectTicketsPopout"
+     class="project-tickets-popout hidden fixed z-50 w-72"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Project tickets">
+    <div class="bg-white/5 backdrop-blur-md border border-surface-300 rounded-sm shadow-lg overflow-hidden">
+        <div class="flex justify-end px-2 pt-1.5 pb-0">
+            <button type="button"
+                    id="projectTicketsPopoutClose"
+                    onclick="closeProjectTicketsPopout()"
+                    class="text-gray-400 hover:text-white p-1 rounded-sm hover:bg-white/10 transition-colors"
+                    aria-label="Close ticket list">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <ul id="projectTicketsPopoutList"
+            class="max-h-96 overflow-y-auto divide-y divide-surface-300/50"
+            role="listbox"
+            aria-label="Project tickets"></ul>
+    </div>
+</div>
+
+<script type="application/json" id="project-tickets-data">{{ project_tickets | tojson }}</script>
 {% else %}
 <div class="text-center py-16">
     <div class="text-gray-500 mb-4">
@@ -55,4 +87,3 @@
 </div>
 {% endif %}
 {% endblock %}
-

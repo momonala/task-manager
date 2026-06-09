@@ -88,6 +88,15 @@ select.form-field {
     transform: translateY(-1px);
 }
 
+.project-tickets-popout {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+
+.project-tickets-trigger[aria-expanded="true"] {
+    color: #d1d5db;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* ─── Drag-and-drop ──────────────────────────────────────────────────────── */
 
 .sortable-ghost {

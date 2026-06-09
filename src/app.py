@@ -47,6 +47,40 @@ def get_project_color(project_id: int) -> str:
     return colors[project_id % len(colors)]
 
 
+POPOUT_TICKET_STATUS_ORDER = (
+    config.STATUS_TODO,
+    config.STATUS_IN_PROGRESS,
+    config.STATUS_PROPOSED,
+    config.STATUS_DONE,
+    config.STATUS_WONT_DO,
+)
+_POPOUT_STATUS_RANK = {status: index for index, status in enumerate(POPOUT_TICKET_STATUS_ORDER)}
+
+
+def _popout_ticket_sort_key(ticket: Ticket) -> tuple[int, float]:
+    """Sort popout tickets by workflow status, then most recently updated."""
+    status_rank = _POPOUT_STATUS_RANK.get(ticket.status, len(POPOUT_TICKET_STATUS_ORDER))
+    return (status_rank, -ticket.updated_at.timestamp())
+
+
+def serialize_projects_ticket_data(projects: list[Project]) -> dict[str, dict]:
+    """Serialize per-project ticket lists for the projects page popout."""
+    return {
+        str(project.id): {
+            "tickets": [
+                {
+                    "id": ticket.id,
+                    "ticket_id": ticket.ticket_id,
+                    "title": ticket.title,
+                    "status": ticket.status,
+                }
+                for ticket in sorted(project.tickets, key=_popout_ticket_sort_key)
+            ],
+        }
+        for project in projects
+    }
+
+
 # --- Views ---
 
 
@@ -95,7 +129,12 @@ def projects_list():
             return max(dates) if dates else datetime.min
 
         projects.sort(key=lambda p: (p.deprecated, -last_activity(p).timestamp()))
-        return render_template("projects.html", projects=projects)
+
+        return render_template(
+            "projects.html",
+            projects=projects,
+            project_tickets=serialize_projects_ticket_data(projects),
+        )
 
 
 # --- API Endpoints ---
