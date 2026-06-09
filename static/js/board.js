@@ -385,7 +385,6 @@ async function editProject(projectId) {
         document.getElementById('projectId').value = project.id;
         document.getElementById('projectName').value = project.name;
         document.getElementById('projectDescription').value = project.description;
-        document.getElementById('projectLocalPath').value = project.local_path || '';
         document.getElementById('projectDeprecated').checked = !!project.deprecated;
         document.getElementById('projectModalTitle').textContent = 'Edit Project';
         document.getElementById('deleteProjectBtn').classList.remove('hidden');
@@ -419,7 +418,6 @@ async function saveProject(event) {
     const data = {
         name: document.getElementById('projectName').value,
         description: document.getElementById('projectDescription').value,
-        local_path: document.getElementById('projectLocalPath').value,
         deprecated: document.getElementById('projectDeprecated').checked,
     };
 
@@ -462,44 +460,6 @@ async function deleteCurrentProject() {
         console.error('Error deleting project:', error);
         showErrorToast('Failed to delete project');
     }
-}
-
-// --- Directory Picker ---
-
-async function selectDirectory() {
-    const input = document.getElementById('projectLocalPath');
-
-    if ('showDirectoryPicker' in window) {
-        try {
-            const directoryHandle = await window.showDirectoryPicker();
-            const dirName = directoryHandle.name;
-            if (input.value === '' || !input.value.includes(dirName)) {
-                input.value = dirName;
-                alert('Directory selected. Please verify or paste the full path if needed.\n\nNote: Browser security prevents accessing full file paths. You may need to paste the complete path manually.');
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') console.error('Error selecting directory:', error);
-        }
-    } else {
-        document.getElementById('directoryPicker').click();
-    }
-}
-
-function handleDirectorySelect(event) {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-        const firstFile = files[0];
-        const input = document.getElementById('projectLocalPath');
-
-        if (firstFile.webkitRelativePath) {
-            const dirName = firstFile.webkitRelativePath.split('/')[0];
-            if (input.value === '' || !input.value.includes(dirName)) {
-                input.value = dirName;
-                alert('Directory selected. Please verify or paste the full path if needed.\n\nNote: Browser security prevents accessing full file paths. You may need to paste the complete path manually.');
-            }
-        }
-    }
-    event.target.value = '';
 }
 
 // --- Celebration ---

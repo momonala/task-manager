@@ -11,9 +11,9 @@ from src.database_orm import Ticket
 from src.db import get_session
 
 
-def _create_project(session, name="Test Project", description="Test", local_path=None):
+def _create_project(session, name="Test Project", description="Test"):
     """Helper to create a project."""
-    project = Project(name=name, description=description, local_path=local_path)
+    project = Project(name=name, description=description)
     session.add(project)
     session.flush()
     return project
@@ -29,16 +29,12 @@ def _create_ticket(session, project_id, title="Test Ticket", **kwargs):
 
 
 # Project tests
-@pytest.mark.parametrize(
-    "local_path,expected_path",
-    [("/tmp/test_project", "/tmp/test_project"), (None, None)],
-)
-def test_project_creation(temp_db, local_path, expected_path):
-    """Test creating projects with and without local_path."""
+def test_project_creation(temp_db):
+    """Test creating a project."""
     with get_session() as session:
-        project = _create_project(session, local_path=local_path)
+        project = _create_project(session)
         assert project.id is not None
-        assert project.local_path == expected_path
+        assert project.name == "Test Project"
 
 
 def test_project_unique_name(temp_db):

@@ -78,6 +78,16 @@ select.form-field {
     transform: translateY(-1px);
 }
 
+/* ─── Project cards ──────────────────────────────────────────────────────── */
+
+.project-card {
+    transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1), border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-1px);
+}
+
 /* ─── Drag-and-drop ──────────────────────────────────────────────────────── */
 
 .sortable-ghost {

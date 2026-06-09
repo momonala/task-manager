@@ -309,7 +309,6 @@ def create_project():
 
     name = data.get("name", "").strip()
     description = data.get("description", "").strip()
-    local_path = data.get("local_path", "").strip() or None
 
     if not name or not description:
         return jsonify({"error": "Name and description are required"}), 400
@@ -319,7 +318,7 @@ def create_project():
         if existing:
             return jsonify({"error": "Project name already exists"}), 409
 
-        project = Project(name=name, description=description, local_path=local_path)
+        project = Project(name=name, description=description)
         session.add(project)
         session.flush()
 
@@ -340,7 +339,6 @@ def get_project(project_id: int):
                 "id": project.id,
                 "name": project.name,
                 "description": project.description,
-                "local_path": project.local_path,
                 "deprecated": project.deprecated,
                 "last_modified": project.last_modified.isoformat() if project.last_modified else None,
             }
@@ -368,9 +366,6 @@ def update_project(project_id: int):
             project.name = new_name
         if "description" in data:
             project.description = data["description"].strip()
-        if "local_path" in data:
-            local_path = data["local_path"]
-            project.local_path = local_path.strip() if local_path else None
         if "deprecated" in data:
             project.deprecated = bool(data["deprecated"])
 

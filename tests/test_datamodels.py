@@ -27,12 +27,12 @@ def test_ticket_data_defaults():
 
 def test_project_data():
     """Test ProjectData dataclass creation."""
-    project = ProjectData(name="Test Project", description="Test description", local_path="/tmp/test")
+    project = ProjectData(name="Test Project", description="Test description")
     assert project.name == "Test Project"
-    assert project.local_path == "/tmp/test"
+    assert project.description == "Test description"
 
 
 def test_project_data_defaults():
     """Test ProjectData with default values."""
     project = ProjectData(name="Test", description="Desc")
-    assert project.local_path is None
+    assert project.deprecated is False

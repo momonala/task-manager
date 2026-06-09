@@ -242,22 +242,6 @@
                                       class="form-field w-full py-2 resize-none"
                                       placeholder="What is this project about?"></textarea>
                         </div>
-                        
-                        <div>
-                            <label for="projectLocalPath" class="block text-sm font-medium text-gray-300 mb-1">
-                                Local Directory <span class="text-gray-500 text-xs">(optional)</span>
-                            </label>
-                            <div class="flex gap-2">
-                                <input type="text" id="projectLocalPath" name="local_path"
-                                       class="form-field flex-1 py-2"
-                                       placeholder="/path/to/project (optional)">
-                                <button type="button" onclick="selectDirectory()"
-                                        class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors whitespace-nowrap">
-                                    Browse
-                                </button>
-                            </div>
-                            <input type="file" id="directoryPicker" webkitdirectory="" directory="" multiple="" style="display: none;" onchange="handleDirectorySelect(event)">
-                        </div>
 
                         <div class="flex items-center gap-3 pt-1">
                             <input type="checkbox" id="projectDeprecated" name="deprecated"

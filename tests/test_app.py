@@ -33,7 +33,7 @@ def client(temp_db):
 def sample_project(temp_db):
     """Create a sample project for testing."""
     with get_session() as session:
-        project = Project(name="Test Project", description="A test project", local_path="/tmp/test")
+        project = Project(name="Test Project", description="A test project")
         session.add(project)
         session.flush()
         return project.id
@@ -73,7 +73,6 @@ def test_view_routes(client, route, expected_content):
     "data,expected_status",
     [
         ({"name": "Project", "description": "Desc"}, HTTP_CREATED),
-        ({"name": "Project", "description": "Desc", "local_path": "/tmp/path"}, HTTP_CREATED),
         ({"description": "Desc"}, HTTP_BAD_REQUEST),
         ({"name": "Project"}, HTTP_BAD_REQUEST),
         ({}, HTTP_BAD_REQUEST),
@@ -117,7 +116,7 @@ def test_get_project(client, sample_project):
 
 def test_update_project(client, sample_project):
     """Test updating a project."""
-    data = {"name": "Updated", "description": "Updated desc", "local_path": "/tmp/updated"}
+    data = {"name": "Updated", "description": "Updated desc"}
     response = client.put(
         f"/api/projects/{sample_project}", data=json.dumps(data), content_type="application/json"
     )

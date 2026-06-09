@@ -252,7 +252,6 @@ Project
 ├── id: Integer (PK)
 ├── name: String(100), unique
 ├── description: Text
-├── local_path: String(500) (nullable)
 └── last_modified: DateTime (auto-updated)
 
 Ticket

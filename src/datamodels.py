@@ -21,5 +21,4 @@ class ProjectData:
 
     name: str
     description: str
-    local_path: str | None = None
     deprecated: bool = False

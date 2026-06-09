@@ -27,7 +27,6 @@ class Project(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str] = mapped_column(Text)
-    local_path: Mapped[str | None] = mapped_column(String(500), default=None)
     deprecated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     last_modified: Mapped[datetime] = mapped_column(
         server_default=func.now(),
