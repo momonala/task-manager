@@ -7,10 +7,37 @@
 }
 
 /* ─── Page background ────────────────────────────────────────────────────── */
-/* Fallback shown before the background video loads.                         */
+/* Solid fallback before media loads; image replaces video on touch / iOS.   */
 
 body {
     background-color: #07090e;
+}
+
+.page-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.page-bg--video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.page-bg--image {
+    display: none;
+    background: center / cover no-repeat;
+}
+
+body.page-bg--use-image .page-bg--video {
+    display: none;
+}
+
+body.page-bg--use-image .page-bg--image {
+    display: block;
 }
 
 /* ─── Form fields ────────────────────────────────────────────────────────── */

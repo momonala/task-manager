@@ -58,11 +58,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="text-gray-100 min-h-screen">
-    <!-- Background video — swap src for any free MP4 from Pexels/Coverr/Mixkit -->
-    <video id="bgVideo" autoplay muted loop playsinline
-           style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:0.35;pointer-events:none;">
+    <!-- Background: video on desktop; image on mobile/iOS (WebM unsupported) -->
+    <div id="bgImage" class="page-bg page-bg--image"
+         style="background-image: url('{{ url_for('static', filename='abstract-background.jpg') }}');"
+         aria-hidden="true"></div>
+    <video id="bgVideo" class="page-bg page-bg--video" autoplay muted loop playsinline>
         <source src="{{ url_for('static', filename='abstract-background.webm') }}" type="video/webm">
     </video>
+    <script>
+        (function () {
+            const video = document.getElementById('bgVideo');
+            if (!video) return;
+
+            const useImage = () => document.body.classList.add('page-bg--use-image');
+
+            if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                useImage();
+                return;
+            }
+
+            if (!video.canPlayType('video/webm')) {
+                useImage();
+                return;
+            }
+
+            video.addEventListener('error', useImage, { once: true });
+            video.play().catch(useImage);
+        })();
+    </script>
     <!-- Navigation -->
     <nav class="bg-surface-100/10 backdrop-blur-sm border-b border-surface-300 sticky top-0 z-50">
         <div class="w-full px-2 sm:px-4">
