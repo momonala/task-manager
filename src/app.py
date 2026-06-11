@@ -111,7 +111,7 @@ def index():
             projects=projects,
             columns=columns,
             status_labels=config.STATUS_LABELS,
-            statuses=config.VALID_STATUSES,
+            statuses=config.STATUS_ORDER,
             project_colors=project_colors,
             deprecated_project_ids=deprecated_project_ids,
         )
