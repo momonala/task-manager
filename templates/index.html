@@ -32,7 +32,7 @@
     <div class="px-4 py-3 border-b border-surface-300 flex items-center justify-between">
         <h2 class="font-semibold text-white flex items-center gap-2">
             {{ label }}
-            <span class="text-gray-500 font-normal text-sm">({{ tickets|length }})</span>
+            <span class="text-gray-300 font-normal text-sm">({{ tickets|length }})</span>
         </h2>
     </div>
     <div id="column-{{ status }}" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="{{ status }}">
@@ -48,15 +48,15 @@
 <div class="mb-6 flex items-center gap-4 flex-wrap">
     <div class="relative flex-1 max-w-md">
         <div class="relative">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input type="text" id="projectSearch"
                    placeholder="Search projects..."
                    oninput="filterProjectsBySearch(this.value)"
-                   class="w-full bg-white/5 border border-surface-300 rounded-full pl-10 pr-8 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
+                   class="w-full bg-white/5 border border-surface-300 rounded-full pl-10 pr-8 py-1.5 text-sm text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent">
             <button id="clearSearchBtn" onclick="clearProjectSearch()"
-                    class="hidden absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                    class="hidden absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -71,7 +71,7 @@
                         Select All
                     </button>
                     <button onclick="selectNoneProjects()"
-                            class="flex-1 text-xs text-gray-400 hover:text-white font-medium px-2 py-1 rounded-full hover:bg-surface-200 transition-colors">
+                            class="flex-1 text-xs text-white font-medium px-2 py-1 rounded-full hover:bg-surface-200 transition-colors">
                         Select None
                     </button>
                 </div>
@@ -110,21 +110,21 @@
 <!-- Empty State -->
 {% if not columns['proposed'] and not columns['todo'] and not columns['in_progress'] and not columns['done'] and not columns['wont_do'] %}
 <div class="text-center py-16">
-    <div class="text-gray-500 mb-4">
+    <div class="text-gray-300 mb-4">
         <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
     </div>
-    <h3 class="text-lg font-medium text-gray-400 mb-2">No tickets yet</h3>
-    <p class="text-gray-500 mb-6">Get started by creating your first ticket</p>
+    <h3 class="text-lg font-medium text-white mb-2">No tickets yet</h3>
+    <p class="text-gray-300 mb-6">Get started by creating your first ticket</p>
     {% if projects %}
     <button onclick="openNewTicketModal()"
             class="bg-accent-blue hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-full transition-colors">
         Create First Ticket
     </button>
     {% else %}
-    <p class="text-gray-500 mb-4">But first, you need to create a project</p>
+    <p class="text-gray-300 mb-4">But first, you need to create a project</p>
     <button onclick="openNewProjectModal()"
             class="bg-accent-blue hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-full transition-colors">
         Create First Project

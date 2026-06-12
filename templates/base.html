@@ -99,11 +99,11 @@
                     </a>
                     <div class="hidden sm:flex items-center gap-4">
                         <a href="{{ url_for('index') }}" 
-                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'index' else 'text-gray-400 hover:text-white' }} transition-colors">
+                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'index' else 'text-gray-200 hover:text-white' }} transition-colors">
                             Board
                         </a>
-                        <a href="{{ url_for('projects_list') }}" 
-                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'projects_list' else 'text-gray-400 hover:text-white' }} transition-colors">
+                        <a href="{{ url_for('projects_list') }}"
+                           class="text-sm {{ 'text-accent-blue' if request.endpoint == 'projects_list' else 'text-gray-200 hover:text-white' }} transition-colors">
                             Projects
                         </a>
                     </div>
@@ -123,8 +123,8 @@
                         </svg>
                         New Project
                     </button>
-                    <button onclick="toggleSettingsPanel()" 
-                            class="text-gray-400 hover:text-white p-2 transition-colors"
+                    <button onclick="toggleSettingsPanel()"
+                            class="text-gray-200 hover:text-white p-2 transition-colors"
                             title="Settings">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -152,9 +152,9 @@
                     <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300 flex-shrink-0">
                         <div class="flex items-center gap-3">
                             <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
-                            <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-sm"></span>
+                            <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-200 bg-white/10 px-2 py-0.5 rounded-sm"></span>
                         </div>
-                        <button type="button" onclick="closeTicketModal()" class="text-gray-400 hover:text-white">
+                        <button type="button" onclick="closeTicketModal()" class="text-gray-200 hover:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -165,7 +165,7 @@
                     <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
                         <!-- Title -->
                         <div>
-                            <label for="ticketTitle" class="block text-sm font-medium text-gray-300 mb-1">
+                            <label for="ticketTitle" class="block text-sm font-medium text-white mb-1">
                                 Title <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="ticketTitle" name="title" required
@@ -175,7 +175,7 @@
                         
                         <!-- Project -->
                         <div>
-                            <label for="ticketProject" class="block text-sm font-medium text-gray-300 mb-1">
+                            <label for="ticketProject" class="block text-sm font-medium text-white mb-1">
                                 Project <span class="text-accent-red">*</span>
                             </label>
                             <select id="ticketProject" name="project_id" required
@@ -189,7 +189,7 @@
                         
                         <!-- Status (only shown when editing) -->
                         <div id="statusField" class="hidden">
-                            <label for="ticketStatus" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                            <label for="ticketStatus" class="block text-sm font-medium text-white mb-1">Status</label>
                             <select id="ticketStatus" name="status"
                                     class="form-field w-full py-2">
                                 {% for status in statuses %}
@@ -203,7 +203,7 @@
                             <div class="flex items-center justify-between mb-1">
                                 <label for="ticketDescription" class="block text-sm font-medium text-gray-300">Description</label>
                                 <button type="button" id="descToggleBtn" onclick="toggleDescriptionPreview()"
-                                        class="text-xs text-gray-400 hover:text-white transition-colors">Preview</button>
+                                        class="text-xs text-gray-200 hover:text-white transition-colors">Preview</button>
                             </div>
                             <textarea id="ticketDescription" name="description" rows="12"
                                       class="form-field w-full py-2 resize-y"
@@ -221,8 +221,8 @@
                             Delete Ticket
                         </button>
                         <div class="flex items-center gap-3 ml-auto">
-                            <button type="button" onclick="closeTicketModal()" 
-                                    class="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                            <button type="button" onclick="closeTicketModal()"
+                                    class="text-gray-200 hover:text-white text-sm font-medium transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" 
@@ -247,7 +247,7 @@
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300">
                         <h2 id="projectModalTitle" class="text-lg font-semibold text-white">New Project</h2>
-                        <button type="button" onclick="closeProjectModal()" class="text-gray-400 hover:text-white">
+                        <button type="button" onclick="closeProjectModal()" class="text-gray-200 hover:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -257,7 +257,7 @@
                     <!-- Modal Body -->
                     <div class="px-6 py-4 space-y-4">
                         <div>
-                            <label for="projectName" class="block text-sm font-medium text-gray-300 mb-1">
+                            <label for="projectName" class="block text-sm font-medium text-white mb-1">
                                 Name <span class="text-accent-red">*</span>
                             </label>
                             <input type="text" id="projectName" name="name" required
@@ -266,7 +266,7 @@
                         </div>
                         
                         <div>
-                            <label for="projectDescription" class="block text-sm font-medium text-gray-300 mb-1">
+                            <label for="projectDescription" class="block text-sm font-medium text-white mb-1">
                                 Description <span class="text-accent-red">*</span>
                             </label>
                             <textarea id="projectDescription" name="description" rows="3" required
@@ -277,7 +277,7 @@
                         <div class="flex items-center gap-3 pt-1">
                             <input type="checkbox" id="projectDeprecated" name="deprecated"
                                    class="accent-accent-blue cursor-pointer w-4 h-4">
-                            <label for="projectDeprecated" class="text-sm text-gray-300 cursor-pointer select-none">
+                            <label for="projectDeprecated" class="text-sm text-white cursor-pointer select-none">
                                 Mark as deprecated
                             </label>
                         </div>
@@ -290,8 +290,8 @@
                             Delete Project
                         </button>
                         <div class="flex items-center gap-3 ml-auto">
-                            <button type="button" onclick="closeProjectModal()" 
-                                    class="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                            <button type="button" onclick="closeProjectModal()"
+                                    class="text-gray-200 hover:text-white text-sm font-medium transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" 
@@ -313,7 +313,7 @@
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6">
                     <h2 id="settingsPanelTitle" class="text-lg font-semibold text-white">Settings</h2>
-                    <button onclick="toggleSettingsPanel()" class="text-gray-400 hover:text-white">
+                    <button onclick="toggleSettingsPanel()" class="text-gray-200 hover:text-white">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -322,7 +322,7 @@
                 
                 <!-- View Options -->
                 <div class="mb-6">
-                    <h3 class="text-sm font-medium text-gray-300 mb-3">View Options</h3>
+                    <h3 class="text-sm font-medium text-white mb-3">View Options</h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" id="toggle-hide-deprecated" checked onchange="toggleHideDeprecated(this.checked)">
@@ -333,7 +333,7 @@
 
                 <!-- Column Visibility -->
                 <div class="mb-6">
-                    <h3 class="text-sm font-medium text-gray-300 mb-3">Column Visibility</h3>
+                    <h3 class="text-sm font-medium text-white mb-3">Column Visibility</h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" id="toggle-proposed" class="column-toggle" data-column="proposed" checked onchange="toggleColumnVisibility('proposed', this.checked)">
@@ -360,10 +360,10 @@
                 
                 <!-- Default Filter Preferences -->
                 <div class="mb-6">
-                    <h3 class="text-sm font-medium text-gray-300 mb-3">Default Filter Preferences</h3>
+                    <h3 class="text-sm font-medium text-white mb-3">Default Filter Preferences</h3>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs text-gray-400 mb-2">Default Project Filter</label>
+                            <label class="block text-xs text-gray-200 mb-2">Default Project Filter</label>
                             <div class="flex gap-2">
                                 <button onclick="setDefaultProjectFilter('all')" 
                                         class="flex-1 text-xs bg-white/10 hover:bg-white/20 text-white font-medium px-3 py-1.5 rounded-full transition-colors">
@@ -374,10 +374,10 @@
                                     No Projects
                                 </button>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2">Choose which projects are selected by default when the page loads</p>
+                            <p class="text-xs text-gray-400 mt-2">Choose which projects are selected by default when the page loads</p>
                         </div>
                         <div>
-                            <label for="defaultSortOrder" class="block text-xs text-gray-400 mb-2">Default Sort Order</label>
+                            <label for="defaultSortOrder" class="block text-xs text-gray-200 mb-2">Default Sort Order</label>
                             <select id="defaultSortOrder" onchange="saveDefaultSortOrder()"
                                     class="form-field w-full py-1.5 text-sm">
                                 <option value="date-desc">Date (Newest First)</option>
@@ -385,10 +385,10 @@
                                 <option value="project-asc">Project (A-Z)</option>
                                 <option value="project-desc">Project (Z-A)</option>
                             </select>
-                            <p class="text-xs text-gray-500 mt-2">Choose the default sort order when the page loads</p>
+                            <p class="text-xs text-gray-400 mt-2">Choose the default sort order when the page loads</p>
                         </div>
                         <div>
-                            <label for="dateRangeFilter" class="block text-xs text-gray-400 mb-2">Date Range Filter</label>
+                            <label for="dateRangeFilter" class="block text-xs text-gray-200 mb-2">Date Range Filter</label>
                             <select id="dateRangeFilter" onchange="applyDateRangeFilter()"
                                     class="form-field w-full py-1.5 text-sm">
                                 <option value="0">Show all tickets</option>
@@ -399,7 +399,7 @@
                                 <option value="180">Last 180 days</option>
                                 <option value="365">Last year</option>
                             </select>
-                            <p class="text-xs text-gray-500 mt-2">Filter tickets by creation date</p>
+                            <p class="text-xs text-gray-400 mt-2">Filter tickets by creation date</p>
                         </div>
                     </div>
                 </div>
