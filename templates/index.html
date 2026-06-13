@@ -35,7 +35,7 @@
             <span class="text-gray-300 font-normal text-sm">({{ tickets|length }})</span>
         </h2>
     </div>
-    <div id="column-{{ status }}" class="p-3 space-y-3 min-h-[200px] kanban-column" data-status="{{ status }}">
+    <div id="column-{{ status }}" class="p-3 space-y-3 min-h-[200px] pb-12 kanban-column" data-status="{{ status }}">
         {% for ticket in tickets %}
         {{ render_ticket(ticket, project_colors, deprecated_ids, muted=muted) }}
         {% endfor %}
