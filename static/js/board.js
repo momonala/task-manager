@@ -110,14 +110,13 @@ function initializeSortable() {
 
                     if (!response.ok) throw new Error('Failed to update status');
 
-                    const columnColor = STATUS_COLORS[newStatus] || STATUS_COLORS.in_progress;
                     const label = STATUS_LABELS[newStatus] || newStatus;
 
                     if (newStatus === 'done' && oldStatus !== 'done') {
                         celebrateCompletion();
-                        showToast(`Ticket moved to ${label}`, 'success', 'Ticket Updated', columnColor);
+                        showToast(`Ticket moved to ${label}`, 'success', 'Ticket Updated');
                     } else {
-                        showToast(`Ticket moved to ${label}`, 'info', 'Ticket Updated', columnColor);
+                        showToast(`Ticket moved to ${label}`, 'info', 'Ticket Updated');
                     }
 
                     updateColumnCounts();
@@ -852,16 +851,15 @@ function _makeSvgIcon(pathData, strokeColor, cssClass) {
     return svg;
 }
 
-function showToast(message, type = 'info', title = null, borderColor = null) {
+function showToast(message, type = 'info', title = null) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
-    const iconColor = type === 'error' ? '#ff453a' : (borderColor || (type === 'success' ? '#30d158' : '#0a84ff'));
+    const iconColor = type === 'success' ? '#30d158' : type === 'error' ? '#ff453a' : '#0a84ff';
     const toastTitle = title || (type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info');
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    if (borderColor) toast.style.borderLeftColor = borderColor;
 
     const content = document.createElement('div');
     content.className = 'toast-content';
