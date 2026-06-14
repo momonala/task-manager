@@ -282,7 +282,9 @@ async function editTicket(ticketId) {
         document.getElementById('ticketId').value = ticket.id;
         document.getElementById('ticketTitle').value = ticket.title;
         document.getElementById('ticketProject').value = ticket.project_id;
-        document.getElementById('ticketStatus').value = ticket.status;
+        const statusEl = document.getElementById('ticketStatus');
+        statusEl.value = ticket.status;
+        statusEl.dataset.originalStatus = ticket.status;
         const descValue = ticket.description || '';
         document.getElementById('ticketDescription').value = descValue;
         document.getElementById('modalTitle').textContent = 'Edit Ticket';
@@ -354,7 +356,9 @@ async function saveTicket(event) {
         description: document.getElementById('ticketDescription').value || null,
     };
 
-    if (!isNew) data.status = document.getElementById('ticketStatus').value;
+    const statusSelect = document.getElementById('ticketStatus');
+    const oldStatus = statusSelect.dataset.originalStatus;
+    if (!isNew) data.status = statusSelect.value;
 
     try {
         const url = isNew ? '/api/tickets' : `/api/tickets/${ticketId}`;
@@ -369,6 +373,9 @@ async function saveTicket(event) {
             throw new Error(err.error || 'Failed to save ticket');
         }
 
+        if (!isNew && data.status === 'done' && oldStatus !== 'done') {
+            celebrateCompletion();
+        }
         showSuccessToast(isNew ? 'Ticket created successfully' : 'Ticket updated successfully');
         setTimeout(() => window.location.reload(), 500);
     } catch (error) {
