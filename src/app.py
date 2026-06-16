@@ -1,6 +1,7 @@
 """Flask application entry point for the task management board."""
 
 import logging
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -57,6 +58,11 @@ POPOUT_TICKET_STATUS_ORDER = (
 _POPOUT_STATUS_RANK = {status: index for index, status in enumerate(POPOUT_TICKET_STATUS_ORDER)}
 
 
+def _project_name_sort_key(project: Project) -> str:
+    """Sort key for alphabetizing projects, ignoring any leading emoji."""
+    return re.sub(r"^[^\w]+", "", project.name).lower()
+
+
 def _popout_ticket_sort_key(ticket: Ticket) -> tuple[int, float]:
     """Sort popout tickets by workflow status, then most recently updated."""
     status_rank = _POPOUT_STATUS_RANK.get(ticket.status, len(POPOUT_TICKET_STATUS_ORDER))
@@ -88,7 +94,8 @@ def serialize_projects_ticket_data(projects: list[Project]) -> dict[str, dict]:
 def index():
     """Render the main Kanban board."""
     with get_session() as session:
-        projects = session.query(Project).order_by(Project.name).all()
+        projects = session.query(Project).all()
+        projects.sort(key=_project_name_sort_key)
         tickets = session.query(Ticket).order_by(Ticket.created_at.desc()).all()
 
         # Generate color map for projects
