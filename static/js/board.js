@@ -373,11 +373,12 @@ async function saveTicket(event) {
             throw new Error(err.error || 'Failed to save ticket');
         }
 
-        if (!isNew && data.status === 'done' && oldStatus !== 'done') {
+        const isCelebrating = !isNew && data.status === 'done' && oldStatus !== 'done';
+        if (isCelebrating) {
             celebrateCompletion();
         }
         showSuccessToast(isNew ? 'Ticket created successfully' : 'Ticket updated successfully');
-        setTimeout(() => window.location.reload(), 500);
+        setTimeout(() => window.location.reload(), isCelebrating ? 3000 : 500);
     } catch (error) {
         console.error('Error saving ticket:', error);
         showErrorToast(error.message);
