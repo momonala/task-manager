@@ -17,7 +17,6 @@ echo "✅ Installing project dependencies with uv"
 uv sync
 
 service_name=$(uv run config --project-name)
-backup_service_name="${service_name}_data-backup-scheduler"
 service_port=$(uv run config --flask-port)
 
 echo "📋 Configuration:"
@@ -30,11 +29,9 @@ echo "📋 Configuration:"
 
 echo "✅ Copying service file to systemd directory"
 sudo cp install/projects_${service_name}.service /lib/systemd/system/projects_${service_name}.service
-sudo cp install/projects_${backup_service_name}.service /lib/systemd/system/projects_${backup_service_name}.service
 
 echo "✅ Setting permissions for the service file"
 sudo chmod 644 /lib/systemd/system/projects_${service_name}.service
-sudo chmod 644 /lib/systemd/system/projects_${backup_service_name}.service
 
 echo "✅ Reloading systemd daemon"
 sudo systemctl daemon-reload
@@ -42,11 +39,8 @@ sudo systemctl daemon-reexec
 
 echo "✅ Enabling the service: projects_${service_name}.service"
 sudo systemctl enable projects_${service_name}.service
-sudo systemctl enable projects_${backup_service_name}.service
 sudo systemctl restart projects_${service_name}.service
-sudo systemctl restart projects_${backup_service_name}.service
 sudo systemctl status projects_${service_name}.service --no-pager
-sudo systemctl status projects_${backup_service_name}.service --no-pager
 
 echo "✅ Adding Cloudflared service"
 /home/mnalavadi/add_cloudflared_service.sh ${service_name}.mnalavadi.org $service_port

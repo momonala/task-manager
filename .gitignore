@@ -87,6 +87,7 @@ cache/
 event_cache.json
 app_calendar_events.json
 recent_locations.html
+data/*
 static/*.html
 
 # Local development

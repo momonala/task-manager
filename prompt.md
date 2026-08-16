@@ -97,7 +97,6 @@ Create a Flask-based task management application with the following specificatio
 project/
 ├── src/                   # Source code
 │   ├── app.py             # Flask app and routes
-│   ├── scheduler.py       # Database backup scheduler
 │   ├── config.py          # Configuration
 │   ├── database_orm.py    # SQLAlchemy models
 │   ├── datamodels.py      # Data transfer objects

@@ -3,7 +3,7 @@
 [![CI](https://github.com/momonala/task-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/momonala/task-manager/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/momonala/task-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/momonala/task-manager)
 
-A Flask-based Kanban task management application with drag-and-drop functionality, automatic database backups, and a dark mode UI inspired by Apple documentation aesthetics.
+A Flask-based Kanban task management application with drag-and-drop functionality and a dark mode UI inspired by Apple documentation aesthetics.
 
 ## Tech Stack
 
@@ -12,7 +12,8 @@ A Flask-based Kanban task management application with drag-and-drop functionalit
 - **Migrations:** Alembic for database schema management
 - **Frontend:** Tailwind CSS (CDN), SortableJS for drag-and-drop, Canvas Confetti for celebrations
 - **Package Manager:** [uv](https://github.com/astral-sh/uv) for fast dependency management
-- **Automation:** Automated hourly database backups via git commits
+
+`data/taskboard.db` is gitignored and backed up centrally by the `db-backup-services` project, not by this app.
 
 ## Architecture
 
@@ -23,17 +24,13 @@ flowchart LR
     end
     subgraph Storage
         DB[(taskboard.db)]
-        Git[(Git Repo)]
     end
-    subgraph Services
-        Server[Flask Server :5010]
-        Scheduler[Backup Scheduler]
+    subgraph Server["Flask Server :5010"]
+        App[Flask App]
     end
     
-    UI -->|REST API| Server
-    Server --> DB
-    Scheduler -->|Hourly Backup| DB
-    Scheduler -->|Auto Commit| Git
+    UI -->|REST API| App
+    App --> DB
 ```
 
 ## Prerequisites
@@ -69,16 +66,7 @@ Start the Flask server:
 uv run app
 ```
 
-Server runs at http://localhost:5010
-
-### With Automatic Backups
-
-Run the database backup scheduler (optional):
-```bash
-uv run python -m src.scheduler
-```
-
-The scheduler will automatically commit and push database changes to git every hour at the top of the hour.
+Server runs at http://localhost:5010.
 
 ### Deployment
 
@@ -92,32 +80,26 @@ cd install
 This will:
 - Install/update uv
 - Install project dependencies
-- Set up systemd services for both the web app and backup scheduler
+- Set up a systemd service for the web app
 - Configure automatic startup on boot
 - Set up Cloudflare Tunnel (if configured)
 
-#### Systemd Services
-
-Two services are installed:
+#### Systemd Service
 
 | Service | Purpose | Port |
 |---------|---------|------|
 | `projects_task-manager.service` | Flask web application | 5010 |
-| `projects_task-manager_scheduler.service` | Hourly database backup | N/A |
 
-**Manage services:**
+**Manage the service:**
 ```bash
 # Check status
 sudo systemctl status projects_task-manager.service
-sudo systemctl status projects_task-manager_scheduler.service
 
 # View logs
 sudo journalctl -u projects_task-manager.service -f
-sudo journalctl -u projects_task-manager_scheduler.service -f
 
-# Restart services
+# Restart
 sudo systemctl restart projects_task-manager.service
-sudo systemctl restart projects_task-manager_scheduler.service
 ```
 
 ## Project Structure
@@ -127,7 +109,6 @@ task-manager/
 ├── src/                       # Source code
 │   ├── __init__.py
 │   ├── app.py                 # Flask application entry point
-│   ├── scheduler.py           # Hourly database backup scheduler
 │   ├── config.py              # Configuration constants
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
 │   ├── datamodels.py          # Data transfer objects
@@ -137,9 +118,8 @@ task-manager/
 │   ├── script.py.mako         # Migration template
 │   └── versions/              # Migration files
 ├── alembic.ini                # Alembic configuration
-├── data/                      # Database storage
-│   ├── .gitkeep               # Keep directory in git
-│   └── taskboard.db           # SQLite database (auto-backed up)
+├── data/                      # Database storage (gitignored)
+│   └── taskboard.db           # SQLite database, backed up by db-backup-services
 ├── templates/                 # Jinja2 templates
 │   ├── base.html              # Base template with dark theme
 │   ├── index.html             # Main Kanban board
@@ -155,8 +135,7 @@ task-manager/
 │   └── test_datamodels.py     # Data model tests
 ├── install/                   # Deployment to a linux server (raspberry pi)
 │   ├── install.sh             # Automated installation script
-│   ├── projects_task-manager.service          # Flask app systemd service
-│   └── projects_task-manager_scheduler.service # Backup scheduler service
+│   └── projects_task-manager.service          # Flask app systemd service
 ├── pyproject.toml             # Dependencies & tool config
 ├── TODO.md                    # Development roadmap
 └── README.md
@@ -268,22 +247,4 @@ Ticket
 
 ## Database Backups
 
-The project includes an automated backup scheduler (`scheduler.py`) that:
-- **Checks for changes** every hour at `:00`
-- **Auto-commits** database changes to git with timestamped messages
-- **Pushes to remote** to ensure off-site backup
-- **Logs all activity** with clear emoji indicators (✅ committed, ⏭️ skipped)
-
-The scheduler runs as a separate process and can be deployed as a systemd service for production use.
-
-### Backup Schedule
-```python
-# Runs at: 00:00, 01:00, 02:00, ... 23:00
-schedule.every().hour.at(":00").do(commit_if_changed)
-```
-
-### Manual Backup
-You can manually trigger a backup by running the commit function:
-```bash
-uv run python -c "from src.scheduler import commit_if_changed; commit_if_changed()"
-```
+`data/taskboard.db` is gitignored and not tracked by this repo. It's backed up centrally by the `db-backup-services` project, which sweeps `*.db` files under `$HOME` on its own schedule.
