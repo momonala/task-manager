@@ -757,6 +757,8 @@ function updateGridLayout() {
 function saveProjectFilterState(selectedProjects) {
     const projectIds = Array.from(selectedProjects).map(id => parseInt(id));
     localStorage.setItem('projectFilterState', JSON.stringify(projectIds));
+    const allIds = Array.from(document.querySelectorAll('.project-filter-checkbox')).map(cb => parseInt(cb.value));
+    localStorage.setItem('projectFilterKnownIds', JSON.stringify(allIds));
 }
 
 function loadProjectFilterState() {
@@ -764,11 +766,23 @@ function loadProjectFilterState() {
     if (!saved) return false;
 
     try {
-        const projectIds = JSON.parse(saved);
-        const projectIdSet = new Set(projectIds.map(id => String(id)));
+        const projectIdSet = new Set(JSON.parse(saved).map(id => String(id)));
+        const savedKnownIds = localStorage.getItem('projectFilterKnownIds');
+        const knownIdSet = new Set(savedKnownIds ? JSON.parse(savedKnownIds).map(id => String(id)) : projectIdSet);
+
+        let hasNewProject = false;
         document.querySelectorAll('.project-filter-checkbox').forEach(checkbox => {
-            checkbox.checked = projectIdSet.has(checkbox.value);
+            if (knownIdSet.has(checkbox.value)) {
+                checkbox.checked = projectIdSet.has(checkbox.value);
+            } else {
+                // Project wasn't known when filter state was last saved (e.g. newly created) — default to visible.
+                checkbox.checked = true;
+                hasNewProject = true;
+            }
         });
+        if (hasNewProject) {
+            saveProjectFilterState(getSelectedProjectIds());
+        }
         return true;
     } catch (e) {
         console.error('Error loading project filter state:', e);
