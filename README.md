@@ -5,39 +5,19 @@
 
 A Flask-based Kanban task management application with drag-and-drop functionality and a dark mode UI inspired by Apple documentation aesthetics.
 
-## Tech Stack
-
-- **Backend:** Python 3.12+ with Flask
-- **Database:** SQLite with SQLAlchemy 2.0 ORM (modern type hints)
-- **Migrations:** Alembic for database schema management
-- **Frontend:** Tailwind CSS (CDN), SortableJS for drag-and-drop, Canvas Confetti for celebrations
-- **Package Manager:** [uv](https://github.com/astral-sh/uv) for fast dependency management
-
-`data/taskboard.db` is gitignored and backed up centrally by the `db-backup-services` project, not by this app.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph Browser
-        UI[Kanban Board]
-    end
-    subgraph Storage
-        DB[(taskboard.db)]
-    end
-    subgraph Server["Flask Server :5010"]
-        App[Flask App]
-    end
-    
-    UI -->|REST API| App
-    App --> DB
-```
-
 ## Prerequisites
 
 - **Python 3.12+**
 - **[uv](https://github.com/astral-sh/uv)** for dependency management
-- **Git** for version control and automatic backups (optional)
+
+## Configuration
+
+Non-secret settings live in `pyproject.toml` under `[tool.config]` (`flask_port`, `database_filename`):
+```bash
+uv run config --all
+```
+
+Secrets (currently just `SECRET_KEY`) are git-ignored in `src/values.py` — copy `src/values.py.example` to `src/values.py` and fill in real values.
 
 ## Installation
 
@@ -52,7 +32,12 @@ cd task-manager
 uv sync
 ```
 
-3. Run database migrations:
+3. Set up secrets:
+```bash
+cp src/values.py.example src/values.py
+```
+
+4. Run database migrations:
 ```bash
 uv run alembic upgrade head
 ```
@@ -68,40 +53,6 @@ uv run app
 
 Server runs at http://localhost:5010.
 
-### Deployment
-
-For deployment on Linux with systemd:
-
-```bash
-cd install
-./install.sh
-```
-
-This will:
-- Install/update uv
-- Install project dependencies
-- Set up a systemd service for the web app
-- Configure automatic startup on boot
-- Set up Cloudflare Tunnel (if configured)
-
-#### Systemd Service
-
-| Service | Purpose | Port |
-|---------|---------|------|
-| `projects_task-manager.service` | Flask web application | 5010 |
-
-**Manage the service:**
-```bash
-# Check status
-sudo systemctl status projects_task-manager.service
-
-# View logs
-sudo journalctl -u projects_task-manager.service -f
-
-# Restart
-sudo systemctl restart projects_task-manager.service
-```
-
 ## Project Structure
 
 ```
@@ -109,7 +60,8 @@ task-manager/
 ├── src/                       # Source code
 │   ├── __init__.py
 │   ├── app.py                 # Flask application entry point
-│   ├── config.py              # Configuration constants
+│   ├── config.py              # Non-secret config from pyproject.toml [tool.config]
+│   ├── values.py              # Secrets (gitignored)
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
 │   ├── datamodels.py          # Data transfer objects
 │   └── db.py                  # Database connection utilities
@@ -139,6 +91,24 @@ task-manager/
 ├── pyproject.toml             # Dependencies & tool config
 ├── TODO.md                    # Development roadmap
 └── README.md
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Browser
+        UI[Kanban Board]
+    end
+    subgraph Storage
+        DB[(taskboard.db)]
+    end
+    subgraph Server["Flask Server :5010"]
+        App[Flask App]
+    end
+    
+    UI -->|REST API| App
+    App --> DB
 ```
 
 ## API Endpoints
@@ -218,9 +188,9 @@ curl -X DELETE http://localhost:5010/api/tickets/tid/a3f9b2c1
 ## Celebration Feature
 
 When a ticket is moved to the "Done" column, the app celebrates your achievement with:
-- 🎊 **Confetti Animation:** 3-second confetti burst from multiple points on screen
-- 🎉 **Celebration Audio:** Kids cheering sound effect (50% volume, gracefully fails if autoplay blocked)
-- 🎨 **Success Toast:** Green-bordered notification with custom styling
+- **Confetti Animation:** 3-second confetti burst from multiple points on screen
+- **Celebration Audio:** Kids cheering sound effect (50% volume, gracefully fails if autoplay blocked)
+- **Success Toast:** Green-bordered notification with custom styling
 
 This feature creates a satisfying dopamine hit for completing tasks, making the board more engaging and fun to use.
 
