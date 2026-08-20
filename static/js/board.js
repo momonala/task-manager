@@ -657,7 +657,7 @@ function celebrateCompletion() {
 
     const duration = 3000;
     const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
     function randomInRange(min, max) {
         return Math.random() * (max - min) + min;
