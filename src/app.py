@@ -90,37 +90,55 @@ def serialize_projects_ticket_data(projects: list[Project]) -> dict[str, dict]:
 # --- Views ---
 
 
+def _build_board_context(session) -> dict:
+    """Build the template context shared by the board page and its refresh fragments."""
+    projects = session.query(Project).all()
+    projects.sort(key=_project_name_sort_key)
+    tickets = session.query(Ticket).order_by(Ticket.created_at.desc()).all()
+
+    # Generate color map for projects
+    project_colors = {project.id: get_project_color(project.id) for project in projects}
+    deprecated_project_ids = {project.id for project in projects if project.deprecated}
+
+    # Group tickets by status
+    columns = {
+        config.STATUS_PROPOSED: [],
+        config.STATUS_TODO: [],
+        config.STATUS_IN_PROGRESS: [],
+        config.STATUS_DONE: [],
+        config.STATUS_WONT_DO: [],
+    }
+    for ticket in tickets:
+        columns[ticket.status].append(ticket)
+
+    return {
+        "projects": projects,
+        "columns": columns,
+        "status_labels": config.STATUS_LABELS,
+        "statuses": config.STATUS_ORDER,
+        "project_colors": project_colors,
+        "deprecated_project_ids": deprecated_project_ids,
+    }
+
+
 @app.route("/")
 def index():
     """Render the main Kanban board."""
     with get_session() as session:
-        projects = session.query(Project).all()
-        projects.sort(key=_project_name_sort_key)
-        tickets = session.query(Ticket).order_by(Ticket.created_at.desc()).all()
+        return render_template("index.html", **_build_board_context(session))
 
-        # Generate color map for projects
-        project_colors = {project.id: get_project_color(project.id) for project in projects}
-        deprecated_project_ids = {project.id for project in projects if project.deprecated}
 
-        # Group tickets by status
-        columns = {
-            config.STATUS_PROPOSED: [],
-            config.STATUS_TODO: [],
-            config.STATUS_IN_PROGRESS: [],
-            config.STATUS_DONE: [],
-            config.STATUS_WONT_DO: [],
-        }
-        for ticket in tickets:
-            columns[ticket.status].append(ticket)
-
-        return render_template(
-            "index.html",
-            projects=projects,
-            columns=columns,
-            status_labels=config.STATUS_LABELS,
-            statuses=config.STATUS_ORDER,
-            project_colors=project_colors,
-            deprecated_project_ids=deprecated_project_ids,
+@app.route("/api/board-state")
+def board_state():
+    """Return freshly rendered board fragments so the client can update without a page reload."""
+    with get_session() as session:
+        context = _build_board_context(session)
+        return jsonify(
+            {
+                "board": render_template("_board.html", **context),
+                "project_filter_items": render_template("_project_filter_items.html", **context),
+                "project_options": render_template("_project_options.html", **context),
+            }
         )
 
 

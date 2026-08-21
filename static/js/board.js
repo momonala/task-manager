@@ -157,11 +157,69 @@ function initializeSortable() {
                 } catch (error) {
                     console.error('Error updating ticket status:', error);
                     showErrorToast('Failed to update ticket status. Please try again.');
-                    window.location.reload();
+                    await refreshBoard();
                 }
             },
         });
     });
+}
+
+// --- Board refresh (in place, no page reload) ---
+
+/**
+ * Re-render the board from the server and swap it in, preserving scroll position,
+ * open overlays, and any in-flight celebration. Falls back to a full page reload
+ * on pages without a board region (e.g. /projects) or if the fetch fails.
+ */
+async function refreshBoard() {
+    const region = document.getElementById('boardRegion');
+    if (!region) {
+        window.location.reload();
+        return;
+    }
+
+    let data;
+    try {
+        const response = await fetch('/api/board-state');
+        if (!response.ok) throw new Error('Failed to refresh board');
+        data = await response.json();
+    } catch (error) {
+        console.error('Error refreshing board:', error);
+        window.location.reload();
+        return;
+    }
+
+    region.innerHTML = data.board;
+
+    const checkboxes = document.getElementById('projectCheckboxes');
+    if (checkboxes) checkboxes.innerHTML = data.project_filter_items;
+
+    const projectSelect = document.getElementById('ticketProject');
+    if (projectSelect) {
+        const previous = projectSelect.value;
+        projectSelect.innerHTML = data.project_options;
+        if (previous && projectSelect.querySelector(`option[value="${previous}"]`)) {
+            projectSelect.value = previous;
+        }
+    }
+
+    // Sortable instances were attached to the discarded columns.
+    initializeSortable();
+    loadColumnVisibility();
+    loadDefaultFilterPreferences();
+    sortTickets();
+    initColumnCountDigits();
+    applyHideDeprecatedToProjects();
+
+    const search = document.getElementById('projectSearch');
+    if (search && search.value) filterProjectsBySearch(search.value);
+}
+
+/** Restore a modal's submit button to its idle state, since the form now outlives the save. */
+function resetSubmitButton(submitBtn, label, text) {
+    submitBtn.disabled = false;
+    label.textContent = text;
+    submitBtn.querySelector('.t-success-check')?.setAttribute('data-state', 'out');
 }
 
 function updateColumnCounts() {
@@ -590,19 +648,23 @@ async function saveTicket(event) {
             throw new Error(err.error || 'Failed to save ticket');
         }
 
-        const isCelebrating = !isNew && data.status === 'done' && oldStatus !== 'done';
-        if (isCelebrating) {
+        if (!isNew && data.status === 'done' && oldStatus !== 'done') {
+            // Confetti and the cheer now play out over the board, uninterrupted by a reload.
             celebrateCompletion();
         }
         submitLabel.textContent = isNew ? 'Created' : 'Updated';
         submitBtn.querySelector('.t-success-check').setAttribute('data-state', 'in');
         showSuccessToast(isNew ? 'Ticket created successfully' : 'Ticket updated successfully');
-        setTimeout(() => window.location.reload(), isCelebrating ? 3000 : 500);
+
+        await refreshBoard();
+        setTimeout(() => {
+            closeTicketModal();
+            resetSubmitButton(submitBtn, submitLabel, originalText);
+        }, 500);
     } catch (error) {
         console.error('Error saving ticket:', error);
         showErrorToast(error.message);
-        submitBtn.disabled = false;
-        submitLabel.textContent = originalText;
+        resetSubmitButton(submitBtn, submitLabel, originalText);
     }
 }
 
@@ -617,7 +679,8 @@ async function deleteCurrentTicket() {
         if (!response.ok) throw new Error('Failed to delete ticket');
 
         showSuccessToast('Ticket deleted successfully');
-        setTimeout(() => window.location.reload(), 500);
+        closeTicketModal();
+        await refreshBoard();
     } catch (error) {
         console.error('Error deleting ticket:', error);
         showErrorToast('Failed to delete ticket');
@@ -843,12 +906,16 @@ async function saveProject(event) {
         submitLabel.textContent = isNew ? 'Created' : 'Updated';
         submitBtn.querySelector('.t-success-check').setAttribute('data-state', 'in');
         showSuccessToast(isNew ? 'Project created successfully' : 'Project updated successfully');
-        setTimeout(() => window.location.reload(), 500);
+
+        await refreshBoard();
+        setTimeout(() => {
+            closeProjectModal();
+            resetSubmitButton(submitBtn, submitLabel, originalText);
+        }, 500);
     } catch (error) {
         console.error('Error saving project:', error);
         showErrorToast(error.message);
-        submitBtn.disabled = false;
-        submitLabel.textContent = originalText;
+        resetSubmitButton(submitBtn, submitLabel, originalText);
     }
 }
 
@@ -863,7 +930,8 @@ async function deleteCurrentProject() {
         if (!response.ok) throw new Error('Failed to delete project');
 
         showSuccessToast('Project deleted successfully');
-        setTimeout(() => window.location.reload(), 500);
+        closeProjectModal();
+        await refreshBoard();
     } catch (error) {
         console.error('Error deleting project:', error);
         showErrorToast('Failed to delete project');

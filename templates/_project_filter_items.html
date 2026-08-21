@@ -1,0 +1,9 @@
+{# Contents of #projectCheckboxes. Re-rendered by /api/board-state after project changes. #}
+{% for project in projects if not project.deprecated %}
+<label class="project-filter-item flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-surface-200 cursor-pointer"
+       data-project-id="{{ project.id }}"
+       data-project-name="{{ project.name|lower }}">
+    <input type="checkbox" class="project-filter-checkbox" value="{{ project.id }}" checked onchange="updateProjectFilter()">
+    <span class="text-sm text-white">{{ project.name }}</span>
+</label>
+{% endfor %}

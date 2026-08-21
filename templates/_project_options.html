@@ -1,0 +1,5 @@
+{# Contents of the #ticketProject select. Re-rendered by /api/board-state after project changes. #}
+<option value="">Select a project</option>
+{% for project in projects if not project.deprecated %}
+<option value="{{ project.id }}">{{ project.name }}</option>
+{% endfor %}

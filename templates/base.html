@@ -179,10 +179,7 @@
                             </label>
                             <select id="ticketProject" name="project_id" required
                                     class="form-field w-full py-2">
-                                <option value="">Select a project</option>
-                                {% for project in projects if not project.deprecated %}
-                                <option value="{{ project.id }}">{{ project.name }}</option>
-                                {% endfor %}
+                                {% include "_project_options.html" %}
                             </select>
                         </div>
                         
