@@ -140,7 +140,7 @@
     </main>
 
     <!-- Ticket Modal -->
-    <div id="ticketModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div id="ticketModal" class="t-modal fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
         <div class="absolute inset-0 flex items-start justify-center px-4 pb-4 pt-8">
             <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300 flex flex-col">
@@ -202,7 +202,7 @@
                             <div class="flex items-center justify-between mb-1">
                                 <label for="ticketDescription" class="block text-sm font-medium text-gray-300">Description</label>
                                 <button type="button" id="descToggleBtn" onclick="toggleDescriptionPreview()"
-                                        class="text-xs text-gray-200 hover:text-white transition-colors">Preview</button>
+                                        class="text-xs text-gray-200 hover:text-white transition-colors"><span id="descToggleLabel" class="t-text-swap">Preview</span></button>
                             </div>
                             <textarea id="ticketDescription" name="description" rows="12"
                                       class="form-field w-full py-2 resize-y"
@@ -224,9 +224,14 @@
                                     class="text-gray-200 hover:text-white text-sm font-medium transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" 
-                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                                Save Ticket
+                            <button type="submit" id="ticketSaveBtn"
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors flex items-center gap-1.5">
+                                <span class="t-success-check" data-state="out" aria-hidden="true">
+                                    <svg viewBox="0 0 10.1668 10.1668" width="14" height="14">
+                                        <path d="M1 5.52L3.92 9.17L9.17 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="save-btn-label">Save Ticket</span>
                             </button>
                         </div>
                     </div>
@@ -236,7 +241,7 @@
     </div>
 
     <!-- Project Modal -->
-    <div id="projectModal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+    <div id="projectModal" class="t-modal fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProjectModal()"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-lg shadow-2xl border border-surface-300">
@@ -274,10 +279,11 @@
                         </div>
 
                         <div class="flex items-center gap-3 pt-1">
-                            <input type="checkbox" id="projectDeprecated" name="deprecated"
-                                   class="accent-accent-blue cursor-pointer w-4 h-4">
-                            <label for="projectDeprecated" class="text-sm text-white cursor-pointer select-none">
-                                Mark as deprecated
+                            <label class="flex items-center gap-3 cursor-pointer select-none">
+                                <button type="button" id="projectDeprecated" class="t-check" role="checkbox" aria-checked="false" onclick="toggleCheckbox(this, () => {})">
+                                    <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                                </button>
+                                <span class="text-sm text-white">Mark as deprecated</span>
                             </label>
                         </div>
                     </div>
@@ -293,9 +299,14 @@
                                     class="text-gray-200 hover:text-white text-sm font-medium transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" 
-                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                                Save Project
+                            <button type="submit" id="projectSaveBtn"
+                                    class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors flex items-center gap-1.5">
+                                <span class="t-success-check" data-state="out" aria-hidden="true">
+                                    <svg viewBox="0 0 10.1668 10.1668" width="14" height="14">
+                                        <path d="M1 5.52L3.92 9.17L9.17 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="save-btn-label">Save Project</span>
                             </button>
                         </div>
                     </div>
@@ -324,7 +335,9 @@
                     <h3 class="text-sm font-medium text-white mb-3">View Options</h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-hide-deprecated" checked onchange="toggleHideDeprecated(this.checked)">
+                            <button type="button" id="toggle-hide-deprecated" class="t-check" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, toggleHideDeprecated)">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">Hide deprecated projects</span>
                         </label>
                     </div>
@@ -335,23 +348,33 @@
                     <h3 class="text-sm font-medium text-white mb-3">Column Visibility</h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-proposed" class="column-toggle" data-column="proposed" checked onchange="toggleColumnVisibility('proposed', this.checked)">
+                            <button type="button" id="toggle-proposed" class="t-check column-toggle" data-column="proposed" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, (v) => toggleColumnVisibility('proposed', v))">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">Proposed</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-todo" class="column-toggle" data-column="todo" checked onchange="toggleColumnVisibility('todo', this.checked)">
+                            <button type="button" id="toggle-todo" class="t-check column-toggle" data-column="todo" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, (v) => toggleColumnVisibility('todo', v))">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">To Do</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-in_progress" class="column-toggle" data-column="in_progress" checked onchange="toggleColumnVisibility('in_progress', this.checked)">
+                            <button type="button" id="toggle-in_progress" class="t-check column-toggle" data-column="in_progress" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, (v) => toggleColumnVisibility('in_progress', v))">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">In Progress</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-done" class="column-toggle" data-column="done" checked onchange="toggleColumnVisibility('done', this.checked)">
+                            <button type="button" id="toggle-done" class="t-check column-toggle" data-column="done" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, (v) => toggleColumnVisibility('done', v))">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">Done</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" id="toggle-wont_do" class="column-toggle" data-column="wont_do" checked onchange="toggleColumnVisibility('wont_do', this.checked)">
+                            <button type="button" id="toggle-wont_do" class="t-check column-toggle" data-column="wont_do" role="checkbox" aria-checked="true" onclick="toggleCheckbox(this, (v) => toggleColumnVisibility('wont_do', v))">
+                                <svg viewBox="0 0 10.1668 10.1668"><path d="M1 5.52L3.92 9.17L9.17 1"/></svg>
+                            </button>
                             <span class="text-sm text-white">Won't Do</span>
                         </label>
                     </div>

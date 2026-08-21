@@ -26,6 +26,39 @@ let _settingsPrevFocus = null;
 let _ticketsPopoutAnchor = null;
 let _projectTicketsData = null;
 
+// --- Shared transition helpers (transitions.dev) ---
+
+function _cssMs(varName, fallback) {
+    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(varName));
+    return Number.isFinite(v) ? v : fallback;
+}
+
+function openOverlay(el) {
+    el.classList.remove('is-closing');
+    el.classList.add('is-open');
+}
+
+function closeOverlay(el, closeVarName, closeFallback) {
+    if (!el.classList.contains('is-open')) return;
+    el.classList.remove('is-open');
+    el.classList.add('is-closing');
+    setTimeout(() => el.classList.remove('is-closing'), _cssMs(closeVarName, closeFallback));
+}
+
+function toggleCheckbox(btn, callback) {
+    const next = btn.getAttribute('aria-checked') !== 'true';
+    btn.setAttribute('aria-checked', String(next));
+    callback(next);
+}
+
+function getChecked(id) {
+    return document.getElementById(id)?.getAttribute('aria-checked') === 'true';
+}
+
+function setChecked(id, value) {
+    document.getElementById(id)?.setAttribute('aria-checked', String(!!value));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const bgVideo = document.getElementById('bgVideo');
     if (bgVideo) bgVideo.playbackRate = 0.5;
@@ -34,15 +67,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadColumnVisibility();
     loadDefaultFilterPreferences();
     sortTickets();
+    initColumnCountDigits();
+    initSearchClear();
 
-    const hideDeprecatedToggle = document.getElementById('toggle-hide-deprecated');
-    if (hideDeprecatedToggle) hideDeprecatedToggle.checked = loadHideDeprecatedSetting();
+    setChecked('toggle-hide-deprecated', loadHideDeprecatedSetting());
     applyHideDeprecatedToProjects();
 
     const searchInput = document.getElementById('projectSearch');
     const dropdown = document.getElementById('projectFilterDropdown');
     if (searchInput) {
-        searchInput.addEventListener('focus', () => dropdown.classList.remove('hidden'));
+        searchInput.addEventListener('focus', () => openOverlay(dropdown));
     }
 });
 
@@ -55,11 +89,11 @@ document.addEventListener('click', (event) => {
         !searchInput.contains(event.target) &&
         !dropdown.contains(event.target) &&
         !clearBtn.contains(event.target)) {
-        dropdown.classList.add('hidden');
+        closeOverlay(dropdown, '--dropdown-close-dur', 150);
     }
 
     const popout = document.getElementById('projectTicketsPopout');
-    if (popout && !popout.classList.contains('hidden') &&
+    if (popout && popout.classList.contains('is-open') &&
         !popout.contains(event.target) &&
         !event.target.closest('.project-tickets-trigger')) {
         closeProjectTicketsPopout();
@@ -133,10 +167,42 @@ function initializeSortable() {
 function updateColumnCounts() {
     document.querySelectorAll('.kanban-column').forEach(column => {
         const count = column.querySelectorAll('.ticket-card:not(.hidden-by-filter)').length;
-        const container = column.closest('.kanban-column-container') || column.closest('.bg-surface-100');
-        const header = container ? container.querySelector('h2 span.text-gray-500') : null;
-        if (header) header.textContent = `(${count})`;
+        const status = column.dataset.status;
+        const group = document.getElementById(`count-${status}`);
+        if (group) setDigitGroup(group, String(count));
     });
+}
+
+// --- Number pop-in (column counts) ---
+
+function initColumnCountDigits() {
+    document.querySelectorAll('.t-digit-group').forEach(group => {
+        const value = group.textContent.trim();
+        group.dataset.value = value;
+        renderDigits(group, value);
+    });
+}
+
+function renderDigits(group, str) {
+    group.replaceChildren();
+    const chars = str.split('');
+    chars.forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 't-digit';
+        span.textContent = ch;
+        if (i === chars.length - 2) span.dataset.stagger = '1';
+        else if (i === chars.length - 1) span.dataset.stagger = '2';
+        group.appendChild(span);
+    });
+}
+
+function setDigitGroup(group, str) {
+    if (group.dataset.value === str) return;
+    group.dataset.value = str;
+    group.classList.remove('is-animating');
+    renderDigits(group, str);
+    void group.offsetHeight; // force reflow
+    group.classList.add('is-animating');
 }
 
 // --- Project Filtering ---
@@ -155,7 +221,11 @@ function filterProjectsBySearch(searchTerm) {
     const dropdown = document.getElementById('projectFilterDropdown');
 
     clearBtn.classList.toggle('hidden', searchTerm.length === 0);
-    dropdown.classList.toggle('hidden', searchTerm.length === 0);
+    if (searchTerm.length === 0) {
+        closeOverlay(dropdown, '--dropdown-close-dur', 150);
+    } else {
+        openOverlay(dropdown);
+    }
 
     document.querySelectorAll('.project-filter-item').forEach(item => {
         const projectName = item.dataset.projectName || '';
@@ -166,9 +236,143 @@ function filterProjectsBySearch(searchTerm) {
 }
 
 function clearProjectSearch() {
-    const searchInput = document.getElementById('projectSearch');
-    searchInput.value = '';
-    filterProjectsBySearch('');
+    if (window._clearProjectSearchWithAnimation) {
+        window._clearProjectSearchWithAnimation();
+    } else {
+        const searchInput = document.getElementById('projectSearch');
+        searchInput.value = '';
+        filterProjectsBySearch('');
+    }
+}
+
+// --- Input clear with dissolve (project search) ---
+
+function initSearchClear() {
+    const wrap = document.querySelector('.t-clear');
+    if (!wrap) return;
+
+    const input = wrap.querySelector('input');
+    const mirror = wrap.querySelector('.t-clear-mirror');
+    const glow = wrap.querySelector('.t-clear-glow');
+    const root = document.documentElement;
+    const canvas = document.createElement('canvas').getContext('2d');
+    let clearing = false;
+
+    const num = (name, fb) => {
+        const v = parseFloat(getComputedStyle(root).getPropertyValue(name));
+        return Number.isFinite(v) ? v : fb;
+    };
+
+    function bezier(str) {
+        const m = String(str).match(/cubic-bezier\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)/);
+        if (!m) return (t) => t;
+        const [x1, y1, x2, y2] = m.slice(1).map(parseFloat);
+        const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+        const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+        return (t) => {
+            if (t <= 0) return 0;
+            if (t >= 1) return 1;
+            let s = t;
+            for (let i = 0; i < 8; i++) {
+                const dx = ((ax * s + bx) * s + cx) * s - t;
+                const d = (3 * ax * s + 2 * bx) * s + cx;
+                if (Math.abs(dx) < 1e-6 || d === 0) break;
+                s -= dx / d;
+            }
+            return ((ay * s + by) * s + cy) * s;
+        };
+    }
+
+    function sync() {
+        const has = input.value.length > 0;
+        wrap.classList.toggle('has-value', has);
+        if (has) mirror.textContent = input.value.replace(/ /g, ' ');
+    }
+
+    function buildGlow(text) {
+        canvas.font = getComputedStyle(input).font;
+        const w = wrap.clientWidth || 280;
+        const padLeft = parseFloat(getComputedStyle(input).paddingLeft) || 12;
+        const spread = num('--glow-spread', 1.5);
+        const layers = [];
+        let x = 0;
+        text.split(/(\s+)/).forEach((seg) => {
+            const segW = canvas.measureText(seg).width;
+            if (seg.trim()) {
+                const cx = padLeft + x + segW / 2;
+                const hw = Math.max(segW * 0.45, 8) * spread;
+                [[0, 0.8, 7, 0.22], [hw * 0.45, 0.55, 8, 0.18],
+                 [-hw * 0.4, 0.65, 6, 0.16], [hw * 0.15, 0.9, 5, 0.14]]
+                    .forEach(([dx, rwm, rh, a]) => {
+                        const lx = (((cx + dx) / w) * 100).toFixed(2);
+                        layers.push(
+                            `radial-gradient(ellipse ${Math.max(hw * rwm, 2).toFixed(1)}px ${rh}px at ${lx}% 100%, rgba(255,255,255,${a}), transparent)`
+                        );
+                    });
+            }
+            x += segW;
+        });
+        return layers.join(', ');
+    }
+
+    function clearWithAnimation() {
+        if (clearing || !input.value) {
+            filterProjectsBySearch('');
+            return;
+        }
+        clearing = true;
+        const keepFocus = document.activeElement === input;
+        mirror.textContent = input.value.replace(/ /g, ' ');
+
+        const total = num('--clear-dur', 1000);
+        const outDur = num('--clear-out-dur', 400);
+        const inDur = num('--clear-in-dur', 400);
+        const outFly = num('--clear-out-fly', 12);
+        const blur = num('--clear-blur', 2);
+        const delay = num('--glow-delay', 50);
+        const peakAt = num('--glow-peak-at', 0.15);
+        const gOp = num('--glow-opacity', 0.85);
+        const easeOut = bezier(getComputedStyle(root).getPropertyValue('--clear-out-ease'));
+
+        input.value = '';
+        wrap.classList.remove('has-value');
+        wrap.classList.add('is-clearing');
+        glow.style.background = buildGlow(mirror.textContent);
+        glow.style.opacity = '0';
+
+        const t0 = performance.now();
+        (function tick(now) {
+            const el = now - t0;
+            const eo = easeOut(Math.min(1, el / outDur));
+            mirror.style.transform = `translateY(${(eo * outFly).toFixed(1)}px)`;
+            mirror.style.opacity = (1 - eo).toFixed(3);
+            mirror.style.filter = `blur(${(eo * blur).toFixed(1)}px)`;
+
+            let g = 0;
+            if (el > delay) {
+                const gp = Math.min(1, (el - delay) / Math.max(1, total - delay));
+                g = gp < peakAt ? gp / peakAt : 1 - (gp - peakAt) / (1 - peakAt);
+            }
+            glow.style.opacity = (g * gOp).toFixed(3);
+
+            if (el < Math.max(total, inDur)) {
+                requestAnimationFrame(tick);
+            } else {
+                wrap.classList.remove('is-clearing');
+                mirror.style.cssText = '';
+                mirror.textContent = '';
+                glow.style.opacity = '0';
+                glow.style.background = '';
+                clearing = false;
+                if (keepFocus) requestAnimationFrame(() => input.focus({ preventScroll: true }));
+                filterProjectsBySearch('');
+            }
+        })(performance.now());
+    }
+
+    input.addEventListener('input', sync);
+    sync();
+    window._clearProjectSearchWithAnimation = clearWithAnimation;
 }
 
 function selectAllProjects() {
@@ -266,7 +470,7 @@ function openNewTicketModal() {
     document.getElementById('deleteTicketBtn').classList.add('hidden');
 
     _ticketModalPrevFocus = document.activeElement;
-    modal.classList.remove('hidden');
+    openOverlay(modal);
     modal.querySelector('input, select, textarea, button')?.focus();
 }
 
@@ -304,7 +508,7 @@ async function editTicket(ticketId) {
         }
 
         _ticketModalPrevFocus = document.activeElement;
-        modal.classList.remove('hidden');
+        openOverlay(modal);
         modal.querySelector('input, select, textarea, button')?.focus();
     } catch (error) {
         console.error('Error fetching ticket:', error);
@@ -313,29 +517,41 @@ async function editTicket(ticketId) {
 }
 
 function closeTicketModal() {
-    document.getElementById('ticketModal').classList.add('hidden');
+    closeOverlay(document.getElementById('ticketModal'), '--modal-close-dur', 150);
     _ticketModalPrevFocus?.focus();
     _ticketModalPrevFocus = null;
     // reset description to edit mode
     document.getElementById('ticketDescription').classList.remove('hidden');
     document.getElementById('descPreview').classList.add('hidden');
-    document.getElementById('descToggleBtn').textContent = 'Preview';
+    document.getElementById('descToggleLabel').textContent = 'Preview';
+}
+
+function swapTextLabel(el, next) {
+    const dur = _cssMs('--text-swap-dur', 150);
+    el.classList.add('is-exit');
+    setTimeout(() => {
+        el.textContent = next;
+        el.classList.remove('is-exit');
+        el.classList.add('is-enter-start');
+        void el.offsetHeight; // force reflow
+        el.classList.remove('is-enter-start');
+    }, dur);
 }
 
 function toggleDescriptionPreview() {
     const textarea = document.getElementById('ticketDescription');
     const preview = document.getElementById('descPreview');
-    const btn = document.getElementById('descToggleBtn');
+    const label = document.getElementById('descToggleLabel');
     const isEditing = !textarea.classList.contains('hidden');
     if (isEditing) {
         preview.innerHTML = marked.parse(textarea.value || '');
         preview.classList.remove('hidden');
         textarea.classList.add('hidden');
-        btn.textContent = 'Edit';
+        swapTextLabel(label, 'Edit');
     } else {
         textarea.classList.remove('hidden');
         preview.classList.add('hidden');
-        btn.textContent = 'Preview';
+        swapTextLabel(label, 'Preview');
     }
 }
 
@@ -345,10 +561,11 @@ async function saveTicket(event) {
     const ticketId = document.getElementById('ticketId').value;
     const isNew = !ticketId;
     const submitBtn = event.target.querySelector('[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const submitLabel = submitBtn.querySelector('.save-btn-label');
+    const originalText = submitLabel.textContent;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving…';
+    submitLabel.textContent = 'Saving…';
 
     const data = {
         title: document.getElementById('ticketTitle').value,
@@ -377,13 +594,15 @@ async function saveTicket(event) {
         if (isCelebrating) {
             celebrateCompletion();
         }
+        submitLabel.textContent = isNew ? 'Created' : 'Updated';
+        submitBtn.querySelector('.t-success-check').setAttribute('data-state', 'in');
         showSuccessToast(isNew ? 'Ticket created successfully' : 'Ticket updated successfully');
         setTimeout(() => window.location.reload(), isCelebrating ? 3000 : 500);
     } catch (error) {
         console.error('Error saving ticket:', error);
         showErrorToast(error.message);
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitLabel.textContent = originalText;
     }
 }
 
@@ -420,7 +639,7 @@ function toggleProjectTicketsPopout(projectId, anchorEl) {
     if (!popout) return;
 
     const projectKey = String(projectId);
-    if (popout.dataset.projectId === projectKey && !popout.classList.contains('hidden')) {
+    if (popout.dataset.projectId === projectKey && popout.classList.contains('is-open')) {
         closeProjectTicketsPopout();
         return;
     }
@@ -446,16 +665,16 @@ function openProjectTicketsPopout(projectId, anchorEl) {
     _ticketsPopoutAnchor = anchorEl;
     anchorEl.setAttribute('aria-expanded', 'true');
 
-    popout.classList.remove('hidden');
     positionProjectTicketsPopout(popout, anchorEl);
+    openOverlay(popout);
     document.getElementById('projectTicketsPopoutClose')?.focus();
 }
 
 function closeProjectTicketsPopout() {
     const popout = document.getElementById('projectTicketsPopout');
-    if (!popout || popout.classList.contains('hidden')) return;
+    if (!popout || !popout.classList.contains('is-open')) return;
 
-    popout.classList.add('hidden');
+    closeOverlay(popout, '--dropdown-close-dur', 150);
     delete popout.dataset.projectId;
     if (_ticketsPopoutAnchor) {
         _ticketsPopoutAnchor.setAttribute('aria-expanded', 'false');
@@ -550,12 +769,12 @@ function openNewProjectModal() {
 
     document.getElementById('projectForm').reset();
     document.getElementById('projectId').value = '';
-    document.getElementById('projectDeprecated').checked = false;
+    setChecked('projectDeprecated', false);
     document.getElementById('projectModalTitle').textContent = 'New Project';
     document.getElementById('deleteProjectBtn').classList.add('hidden');
 
     _projectModalPrevFocus = document.activeElement;
-    modal.classList.remove('hidden');
+    openOverlay(modal);
     modal.querySelector('input, select, textarea, button')?.focus();
 }
 
@@ -571,12 +790,12 @@ async function editProject(projectId) {
         document.getElementById('projectId').value = project.id;
         document.getElementById('projectName').value = project.name;
         document.getElementById('projectDescription').value = project.description;
-        document.getElementById('projectDeprecated').checked = !!project.deprecated;
+        setChecked('projectDeprecated', !!project.deprecated);
         document.getElementById('projectModalTitle').textContent = 'Edit Project';
         document.getElementById('deleteProjectBtn').classList.remove('hidden');
 
         _projectModalPrevFocus = document.activeElement;
-        modal.classList.remove('hidden');
+        openOverlay(modal);
         modal.querySelector('input, select, textarea, button')?.focus();
     } catch (error) {
         console.error('Error fetching project:', error);
@@ -585,7 +804,7 @@ async function editProject(projectId) {
 }
 
 function closeProjectModal() {
-    document.getElementById('projectModal').classList.add('hidden');
+    closeOverlay(document.getElementById('projectModal'), '--modal-close-dur', 150);
     _projectModalPrevFocus?.focus();
     _projectModalPrevFocus = null;
 }
@@ -596,15 +815,16 @@ async function saveProject(event) {
     const projectId = document.getElementById('projectId').value;
     const isNew = !projectId;
     const submitBtn = event.target.querySelector('[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const submitLabel = submitBtn.querySelector('.save-btn-label');
+    const originalText = submitLabel.textContent;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving…';
+    submitLabel.textContent = 'Saving…';
 
     const data = {
         name: document.getElementById('projectName').value,
         description: document.getElementById('projectDescription').value,
-        deprecated: document.getElementById('projectDeprecated').checked,
+        deprecated: getChecked('projectDeprecated'),
     };
 
     try {
@@ -620,13 +840,15 @@ async function saveProject(event) {
             throw new Error(err.error || 'Failed to save project');
         }
 
+        submitLabel.textContent = isNew ? 'Created' : 'Updated';
+        submitBtn.querySelector('.t-success-check').setAttribute('data-state', 'in');
         showSuccessToast(isNew ? 'Project created successfully' : 'Project updated successfully');
         setTimeout(() => window.location.reload(), 500);
     } catch (error) {
         console.error('Error saving project:', error);
         showErrorToast(error.message);
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitLabel.textContent = originalText;
     }
 }
 
@@ -708,7 +930,7 @@ function toggleColumnVisibility(columnName, isVisible) {
 function saveColumnVisibility() {
     const visibility = {};
     document.querySelectorAll('.column-toggle').forEach(checkbox => {
-        visibility[checkbox.dataset.column] = checkbox.checked;
+        visibility[checkbox.dataset.column] = checkbox.getAttribute('aria-checked') === 'true';
     });
     localStorage.setItem('columnVisibility', JSON.stringify(visibility));
 }
@@ -730,7 +952,7 @@ function loadColumnVisibility() {
     document.querySelectorAll('.column-toggle').forEach(checkbox => {
         const column = checkbox.dataset.column;
         if (Object.prototype.hasOwnProperty.call(visibility, column)) {
-            checkbox.checked = visibility[column];
+            checkbox.setAttribute('aria-checked', String(visibility[column]));
             toggleColumnVisibility(column, visibility[column]);
         }
     });
