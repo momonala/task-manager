@@ -604,7 +604,7 @@ async function editTicket(ticketId) {
             preview.innerHTML = marked.parse(descValue);
             preview.classList.remove('hidden');
             textarea.classList.add('hidden');
-            document.getElementById('descToggleBtn').textContent = 'Edit';
+            document.getElementById('descToggleLabel').textContent = 'Edit';
         }
 
         _ticketModalPrevFocus = document.activeElement;
