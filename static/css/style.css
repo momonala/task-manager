@@ -148,6 +148,40 @@ select.form-field {
     padding-right: 2.5rem;
 }
 
+/* ─── Mobile layout ──────────────────────────────────────────────────────── */
+
+body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+html:has(.t-modal.is-open),
+html:has(#settingsPanel:not(.hidden)) {
+    overflow: hidden;
+}
+
+.mobile-tabbar {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+main {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+    main { padding-bottom: 1.5rem; }
+}
+
+/* iOS Safari overlays the keyboard instead of shrinking the layout          */
+/* viewport, so modals track the visual viewport (set in board.js).          */
+@media (max-width: 639.98px), (pointer: coarse) {
+    .t-modal .modal-viewport {
+        top: var(--vv-top, 0px);
+        bottom: auto;
+        height: var(--vv-height, 100dvh);
+    }
+}
+
 /* ─── Settings panel ────────────────────────────────────────────────────── */
 
 #settingsPanel > div:first-child {

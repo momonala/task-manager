@@ -45,6 +45,42 @@ function closeOverlay(el, closeVarName, closeFallback) {
     setTimeout(() => el.classList.remove('is-closing'), _cssMs(closeVarName, closeFallback));
 }
 
+function trackVisualViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement.style;
+    const update = () => {
+        root.setProperty('--vv-height', `${vv.height}px`);
+        root.setProperty('--vv-top', `${vv.offsetTop}px`);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+}
+
+function autosizeTextarea(el) {
+    const scroller = el.closest('.ticket-modal-body');
+    const scrollTop = scroller?.scrollTop;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+    if (scroller) scroller.scrollTop = scrollTop;
+}
+
+function autosizeOnWidthChange(el) {
+    if (!el) return;
+    let lastWidth = 0;
+    new ResizeObserver(([entry]) => {
+        const width = entry.contentRect.width;
+        if (width === lastWidth) return;
+        lastWidth = width;
+        if (width) autosizeTextarea(el);
+    }).observe(el);
+}
+
+function visibleSubmitButton(form) {
+    return [...form.querySelectorAll('[type="submit"]')].find(btn => btn.getClientRects().length);
+}
+
 function toggleCheckbox(btn, callback) {
     const next = btn.getAttribute('aria-checked') !== 'true';
     btn.setAttribute('aria-checked', String(next));
@@ -62,6 +98,9 @@ function setChecked(id, value) {
 document.addEventListener('DOMContentLoaded', () => {
     const bgVideo = document.getElementById('bgVideo');
     if (bgVideo) bgVideo.playbackRate = 0.5;
+
+    trackVisualViewport();
+    autosizeOnWidthChange(document.getElementById('ticketDescription'));
 
     initializeSortable();
     loadColumnVisibility();
@@ -526,6 +565,7 @@ function openNewTicketModal() {
     document.getElementById('ticketIdBadge').classList.add('hidden');
     document.getElementById('statusField').classList.add('hidden');
     document.getElementById('deleteTicketBtn').classList.add('hidden');
+    autosizeTextarea(document.getElementById('ticketDescription'));
 
     _ticketModalPrevFocus = document.activeElement;
     openOverlay(modal);
@@ -548,7 +588,9 @@ async function editTicket(ticketId) {
         statusEl.value = ticket.status;
         statusEl.dataset.originalStatus = ticket.status;
         const descValue = ticket.description || '';
-        document.getElementById('ticketDescription').value = descValue;
+        const textarea = document.getElementById('ticketDescription');
+        textarea.value = descValue;
+        autosizeTextarea(textarea);
         document.getElementById('modalTitle').textContent = 'Edit Ticket';
         const badge = document.getElementById('ticketIdBadge');
         badge.textContent = ticket.ticket_id;
@@ -561,7 +603,7 @@ async function editTicket(ticketId) {
             const preview = document.getElementById('descPreview');
             preview.innerHTML = marked.parse(descValue);
             preview.classList.remove('hidden');
-            document.getElementById('ticketDescription').classList.add('hidden');
+            textarea.classList.add('hidden');
             document.getElementById('descToggleBtn').textContent = 'Edit';
         }
 
@@ -609,6 +651,7 @@ function toggleDescriptionPreview() {
     } else {
         textarea.classList.remove('hidden');
         preview.classList.add('hidden');
+        autosizeTextarea(textarea);
         swapTextLabel(label, 'Preview');
     }
 }
@@ -618,7 +661,7 @@ async function saveTicket(event) {
 
     const ticketId = document.getElementById('ticketId').value;
     const isNew = !ticketId;
-    const submitBtn = event.target.querySelector('[type="submit"]');
+    const submitBtn = visibleSubmitButton(event.target);
     const submitLabel = submitBtn.querySelector('.save-btn-label');
     const originalText = submitLabel.textContent;
 
@@ -877,7 +920,7 @@ async function saveProject(event) {
 
     const projectId = document.getElementById('projectId').value;
     const isNew = !projectId;
-    const submitBtn = event.target.querySelector('[type="submit"]');
+    const submitBtn = visibleSubmitButton(event.target);
     const submitLabel = submitBtn.querySelector('.save-btn-label');
     const originalText = submitLabel.textContent;
 

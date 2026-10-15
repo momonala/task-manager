@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>{% block title %}Task Board{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,15 +108,15 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="openNewTicketModal()"
-                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="openNewTicketModal()" aria-label="New Ticket"
+                            class="bg-accent-blue hover:bg-blue-600 text-white text-sm font-medium p-2.5 sm:px-4 sm:py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16M4 12h16"/>
                         </svg>
-                        New Ticket
+                        <span class="hidden sm:inline">New Ticket</span>
                     </button>
                     <button onclick="openNewProjectModal()"
-                            class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+                            class="hidden bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors sm:flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16M4 12h16"/>
                         </svg>
@@ -124,7 +124,7 @@
                     </button>
                     <button onclick="toggleSettingsPanel()"
                             class="text-gray-200 hover:text-white p-2 transition-colors"
-                            title="Settings">
+                            title="Settings" aria-label="Settings">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
@@ -135,33 +135,64 @@
     </nav>
 
     <!-- Main content -->
-    <main class="w-full px-2 sm:px-4 py-6">
+    <main class="w-full px-2 sm:px-4 pt-6">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Mobile tab bar -->
+    <nav class="mobile-tabbar sm:hidden fixed bottom-0 inset-x-0 z-40 bg-surface-100/80 backdrop-blur-md border-t border-surface-300" aria-label="Primary">
+        <div class="grid grid-cols-2">
+            <a href="{{ url_for('index') }}"
+               {% if request.endpoint == 'index' %}aria-current="page"{% endif %}
+               class="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium {{ 'text-accent-blue' if request.endpoint == 'index' else 'text-gray-300' }}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                Tasks
+            </a>
+            <a href="{{ url_for('projects_list') }}"
+               {% if request.endpoint == 'projects_list' %}aria-current="page"{% endif %}
+               class="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium {{ 'text-accent-blue' if request.endpoint == 'projects_list' else 'text-gray-300' }}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                </svg>
+                Projects
+            </a>
+        </div>
+    </nav>
 
     <!-- Ticket Modal -->
     <div id="ticketModal" class="t-modal fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTicketModal()"></div>
-        <div class="absolute inset-0 flex items-start justify-center px-4 pb-4 pt-8">
-            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-300 flex flex-col">
+        <div class="modal-viewport absolute inset-0 flex items-start justify-center sm:px-4 sm:pb-4 sm:pt-8">
+            <div class="bg-surface-100/80 sm:bg-white/5 backdrop-blur-md rounded-none sm:rounded-sm w-full max-w-4xl h-full sm:h-auto max-h-full overflow-hidden shadow-2xl sm:border border-surface-300 flex flex-col">
                 <form id="ticketForm" onsubmit="saveTicket(event)" class="flex flex-col min-h-0 flex-1">
                     <input type="hidden" id="ticketId" name="ticketId">
 
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-surface-300 flex-shrink-0">
-                        <div class="flex items-center gap-3">
-                            <h2 id="modalTitle" class="text-lg font-semibold text-white">New Ticket</h2>
+                    <div class="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-surface-300 flex-shrink-0">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <h2 id="modalTitle" class="text-lg font-semibold text-white truncate">New Ticket</h2>
                             <span id="ticketIdBadge" class="hidden font-mono text-xs text-gray-200 bg-white/10 px-2 py-0.5 rounded-sm"></span>
                         </div>
-                        <button type="button" onclick="closeTicketModal()" class="text-gray-200 hover:text-white">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <button type="button" id="deleteTicketBtn" onclick="deleteCurrentTicket()"
+                                    class="hidden text-accent-red hover:text-red-400 p-1 -m-1 transition-colors"
+                                    aria-label="Delete Ticket" title="Delete Ticket">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                            <button type="button" onclick="closeTicketModal()" class="text-gray-200 hover:text-white p-1 -m-1" aria-label="Close">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Modal Body -->
-                    <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
+                    <div class="ticket-modal-body px-4 sm:px-6 pt-4 pb-4 space-y-4 overflow-y-auto overscroll-contain flex-1 min-h-0">
                         <!-- Title -->
                         <div>
                             <label for="ticketTitle" class="block text-sm font-medium text-white mb-1">
@@ -202,21 +233,18 @@
                                         class="text-xs text-gray-200 hover:text-white transition-colors"><span id="descToggleLabel" class="t-text-swap">Preview</span></button>
                             </div>
                             <textarea id="ticketDescription" name="description" rows="12"
-                                      class="form-field w-full py-2 resize-y"
+                                      oninput="autosizeTextarea(this)"
+                                      class="form-field w-full py-2 resize-none overflow-hidden"
                                       placeholder="Fix yo shit!"></textarea>
-                            <div id="descPreview" class="hidden desc-preview form-field w-full py-2 min-h-[16rem] max-h-[24rem] overflow-y-auto"></div>
+                            <div id="descPreview" class="hidden desc-preview form-field w-full py-2 min-h-[16rem]"></div>
                             <!-- TODO: Add AI generation button here -->
                         </div>
                         
                     </div>
                     
                     <!-- Modal Footer -->
-                    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-300 bg-white/5 flex-shrink-0">
-                        <button type="button" id="deleteTicketBtn" onclick="deleteCurrentTicket()" 
-                                class="hidden text-accent-red hover:text-red-400 text-sm font-medium transition-colors">
-                            Delete Ticket
-                        </button>
-                        <div class="flex items-center gap-3 ml-auto">
+                    <div class="flex items-center justify-end px-4 sm:px-6 pt-3 sm:pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 border-t border-surface-300 bg-white/5 flex-shrink-0">
+                        <div class="flex items-center gap-3">
                             <button type="button" onclick="closeTicketModal()"
                                     class="text-gray-200 hover:text-white text-sm font-medium transition-colors">
                                 Cancel
@@ -240,8 +268,8 @@
     <!-- Project Modal -->
     <div id="projectModal" class="t-modal fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeProjectModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-lg shadow-2xl border border-surface-300">
+        <div class="modal-viewport absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white/5 backdrop-blur-md rounded-sm w-full max-w-lg max-h-full overflow-y-auto overscroll-contain shadow-2xl border border-surface-300">
                 <form id="projectForm" onsubmit="saveProject(event)">
                     <input type="hidden" id="projectId" name="projectId">
                     
