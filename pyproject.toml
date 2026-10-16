@@ -13,7 +13,6 @@ dependencies = [
     "pytest-cov>=4.0.0",
     "black",
     "ruff>=0.14.10",
-    "requests>=2.31.0",
     "isort>=7.0.0",
     "typer>=0.9.0",
 ]
