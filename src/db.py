@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
@@ -11,6 +12,14 @@ from src.config import DATABASE_URL
 from src.database_orm import Base
 
 engine = create_engine(DATABASE_URL, echo=False)
+
+
+@event.listens_for(engine, "connect")
+def _set_pragmas(dbapi_conn, _connection_record):
+    dbapi_conn.execute("PRAGMA journal_mode=WAL")
+    dbapi_conn.execute("PRAGMA synchronous=NORMAL")
+
+
 SessionLocal = sessionmaker(bind=engine)
 
 
