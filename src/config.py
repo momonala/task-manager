@@ -40,7 +40,7 @@ STATUS_LABELS = {
     STATUS_WONT_DO: "Won't Do",
 }
 
-DEBUG = True
+DEBUG = False
 
 
 # fmt: off
