@@ -1,3 +1,0 @@
-# Stub values for CI/testing - copy to values.py for local development
-
-SECRET_KEY = "dummy-secret-key-for-ci-testing-not-for-production"

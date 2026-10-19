@@ -17,8 +17,6 @@ Non-secret settings live in `pyproject.toml` under `[tool.config]` (`flask_port`
 uv run config --all
 ```
 
-Secrets (currently just `SECRET_KEY`) are git-ignored in `src/values.py` — copy `src/values.py.example` to `src/values.py` and fill in real values.
-
 ## Installation
 
 1. Clone the repository:
@@ -32,12 +30,7 @@ cd task-manager
 uv sync
 ```
 
-3. Set up secrets:
-```bash
-cp src/values.py.example src/values.py
-```
-
-4. Run database migrations:
+3. Run database migrations:
 ```bash
 uv run alembic upgrade head
 ```
@@ -61,7 +54,6 @@ task-manager/
 │   ├── __init__.py
 │   ├── app.py                 # Flask application entry point
 │   ├── config.py              # Non-secret config from pyproject.toml [tool.config]
-│   ├── values.py              # Secrets (gitignored)
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
 │   ├── datamodels.py          # Data transfer objects
 │   └── db.py                  # Database connection utilities
