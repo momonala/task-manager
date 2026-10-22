@@ -6,15 +6,15 @@ authors = [{name = "Mohit Nalavadi"}]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "flask>=3.0.0",
-    "sqlalchemy>=2.0.0",
-    "alembic>=1.13.0",
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
+    "flask>=3.1.3",
+    "sqlalchemy>=2.1.4",
+    "alembic>=1.20.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "black",
-    "ruff>=0.14.10",
-    "isort>=7.0.0",
-    "typer>=0.9.0",
+    "ruff>=0.17.0",
+    "isort>=9.0.2",
+    "typer>=0.27.3",
 ]
 
 [tool.config]
