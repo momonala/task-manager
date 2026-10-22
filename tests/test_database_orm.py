@@ -42,9 +42,8 @@ def test_project_unique_name(temp_db):
     with get_session() as session:
         _create_project(session, name="Unique Project")
 
-    with pytest.raises(IntegrityError):
-        with get_session() as session:
-            _create_project(session, name="Unique Project", description="Duplicate")
+    with pytest.raises(IntegrityError), get_session() as session:
+        _create_project(session, name="Unique Project", description="Duplicate")
 
 
 # Ticket tests

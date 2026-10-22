@@ -13,7 +13,6 @@ dependencies = [
     "pytest-cov>=7.1.0",
     "black",
     "ruff>=0.17.0",
-    "isort>=9.0.2",
     "typer>=0.27.3",
 ]
 
@@ -47,9 +46,6 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 check_untyped_defs = true
 
-[tool.isort]
-force_single_line = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -71,3 +67,13 @@ exclude_lines = [
 
 [tool.uv]
 exclude-newer = "1 week"
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF100", "PLW1510"]
+ignore = ["E501", "B008", "UP042"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
