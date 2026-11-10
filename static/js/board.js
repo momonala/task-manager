@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initColumnCountDigits();
     initSearchClear();
 
+    setChecked('toggle-hide-deprecated', cardFilters.hideDeprecated);
     applyHideDeprecatedToProjects();
 
     const searchInput = document.getElementById('projectSearch');
@@ -492,7 +493,6 @@ function renderFilterControls() {
     });
     const dateRangeSelect = document.getElementById('dateRangeFilter');
     if (dateRangeSelect) dateRangeSelect.value = cardFilters.days === null ? '' : String(cardFilters.days);
-    setChecked('toggle-hide-deprecated', cardFilters.hideDeprecated);
 }
 
 function selectAllProjects() {
@@ -520,8 +520,9 @@ function cardFromElement(card) {
 
 function applyAllFilters() {
     const now = Date.now();
+    const filters = filtersForRun(cardFilters, localStorage);
     document.querySelectorAll('.ticket-card').forEach(card => {
-        card.classList.toggle('hidden-by-filter', !cardVisibility(cardFromElement(card), cardFilters, now));
+        card.classList.toggle('hidden-by-filter', !cardVisibility(cardFromElement(card), filters, now));
     });
 
     updateColumnCounts();
@@ -1144,7 +1145,7 @@ function toggleHideDeprecated(checked) {
 }
 
 function applyHideDeprecatedToProjects() {
-    const hide = cardFilters.hideDeprecated;
+    const hide = filtersForRun(cardFilters, localStorage).hideDeprecated;
     document.querySelectorAll('[data-deprecated="true"]').forEach(card => {
         if (card.classList.contains('ticket-card')) return;
         card.classList.toggle('hidden', hide);

@@ -32,6 +32,21 @@ function cardVisibility(card, filters, now = Date.now()) {
     return filters.selectedProjectIds.has(card.projectId) && dateOk;
 }
 
+function loadHideDeprecated(storage) {
+    const stored = storage.getItem(FILTER_STORAGE_KEYS.hideDeprecated);
+    return stored === null ? true : stored === 'true';
+}
+
+/**
+ * The filters to apply now: hideDeprecated is re-read so a change saved by another tab applies here.
+ * @param {CardFilters} filters
+ * @param {Storage} storage
+ * @returns {CardFilters}
+ */
+function filtersForRun(filters, storage) {
+    return { ...filters, hideDeprecated: loadHideDeprecated(storage) };
+}
+
 function restoreProjectSelection(storage, projectIds) {
     const saved = storage.getItem(FILTER_STORAGE_KEYS.selectedProjectIds);
     if (!saved) return null;
@@ -68,11 +83,10 @@ function loadProjectSelection(storage, projectIds) {
 function loadFilters(storage, projectIds, dayOptions) {
     const { selectedProjectIds, unsaved } = loadProjectSelection(storage, projectIds);
     const storedDays = storage.getItem(FILTER_STORAGE_KEYS.days) || '0';
-    const storedHideDeprecated = storage.getItem(FILTER_STORAGE_KEYS.hideDeprecated);
     return {
         filters: {
             selectedProjectIds,
-            hideDeprecated: storedHideDeprecated === null ? true : storedHideDeprecated === 'true',
+            hideDeprecated: loadHideDeprecated(storage),
             days: dayOptions.includes(storedDays) ? parseInt(storedDays) || 0 : null,
         },
         selectionUnsaved: unsaved,
@@ -100,5 +114,5 @@ function saveDefaultProjectMode(storage, mode) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { cardVisibility, loadFilters, saveFilters, saveDefaultProjectMode, FILTER_STORAGE_KEYS, DAY_MS };
+    module.exports = { cardVisibility, filtersForRun, loadFilters, saveFilters, saveDefaultProjectMode, FILTER_STORAGE_KEYS, DAY_MS };
 }
