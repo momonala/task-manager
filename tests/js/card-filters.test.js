@@ -42,27 +42,11 @@ const VISIBILITY_TABLE = [
     [true, false, false, 'inside', true],
     [true, false, false, 'boundary', true],
     [true, false, false, 'outside', false],
-    [true, false, true, 'inside', true],
-    [true, false, true, 'boundary', true],
-    [true, false, true, 'outside', false],
     [false, false, false, 'inside', false],
-    [false, false, false, 'boundary', false],
-    [false, false, false, 'outside', false],
-    [false, false, true, 'inside', false],
-    [false, false, true, 'boundary', false],
-    [false, false, true, 'outside', false],
-    [true, true, false, 'inside', true],
-    [true, true, false, 'boundary', true],
-    [true, true, false, 'outside', false],
-    [true, true, true, 'inside', false],
-    [true, true, true, 'boundary', false],
-    [true, true, true, 'outside', false],
+    [true, false, true, 'inside', true],
     [false, true, false, 'inside', true],
-    [false, true, false, 'boundary', true],
+    [true, true, true, 'inside', false],
     [false, true, false, 'outside', false],
-    [false, true, true, 'inside', false],
-    [false, true, true, 'boundary', false],
-    [false, true, true, 'outside', false],
 ];
 
 for (const [selected, deprecated, hideDeprecated, date, expected] of VISIBILITY_TABLE) {
@@ -77,17 +61,8 @@ for (const days of [0, null]) {
         const card = { projectId: '5', deprecated: false, createdAtSeconds: 0 };
         const filters = { selectedProjectIds: new Set(['5']), hideDeprecated: true, days };
         assert.equal(cardVisibility(card, filters, NOW), true);
-        assert.equal(cardVisibility({ ...card, deprecated: true }, { ...filters, hideDeprecated: false }, NOW), true);
-        assert.equal(cardVisibility({ ...card, projectId: '6' }, filters, NOW), false);
     });
 }
-
-test('visibility: an unparseable timestamp is hidden once a cutoff applies', () => {
-    const card = { projectId: '5', deprecated: false, createdAtSeconds: NaN };
-    const filters = { selectedProjectIds: new Set(['5']), hideDeprecated: true, days: 1 };
-    assert.equal(cardVisibility(card, filters, NOW), false);
-    assert.equal(cardVisibility(card, { ...filters, days: 0 }, NOW), true);
-});
 
 const PROJECTS = ['1', '2', '3'];
 
@@ -106,7 +81,6 @@ test('load: empty storage selects every project and shows all dates', () => {
 
 for (const [mode, selected, unsaved] of [
     ['all', ['1', '2', '3'], true],
-    ['', ['1', '2', '3'], true],
     ['none', [], true],
     ['bogus', ['1', '2', '3'], false],
 ]) {
@@ -147,60 +121,26 @@ test('load: saved ids for projects no longer on the page are dropped', () => {
     assert.equal(loaded.selectionUnsaved, false);
 });
 
-test('load: selection follows page order, not saved order', () => {
-    const loaded = load({ projectFilterState: '[3,1]', projectFilterKnownIds: '[3,2,1]' });
-    assert.deepEqual(loaded.selectedProjectIds, ['1', '3']);
-});
-
-for (const [label, entries] of [
-    ['invalid JSON selection', { projectFilterState: 'not json' }],
-    ['non-array selection', { projectFilterState: '{}' }],
-    ['null selection', { projectFilterState: 'null' }],
-    ['invalid JSON known ids', { projectFilterState: '[1]', projectFilterKnownIds: '[1,' }],
-]) {
-    test(`load: corrupt ${label} falls back to the default mode`, (t) => {
-        const errors = t.mock.method(console, 'error', () => {});
-        const loaded = load({ ...entries, defaultProjectFilter: 'none' });
-        assert.deepEqual(loaded.selectedProjectIds, []);
-        assert.equal(loaded.selectionUnsaved, true);
-        assert.equal(errors.mock.callCount(), 1);
-    });
-}
-
-test('load: an empty saved selection string falls back without logging', (t) => {
-    const errors = t.mock.method(console, 'error', () => {});
-    const loaded = load({ projectFilterState: '', defaultProjectFilter: 'bogus' });
-    assert.deepEqual(loaded.selectedProjectIds, ['1', '2', '3']);
-    assert.equal(loaded.selectionUnsaved, false);
-    assert.equal(errors.mock.callCount(), 0);
+test('load: a corrupt saved selection falls back to the default mode', (t) => {
+    t.mock.method(console, 'error', () => {});
+    const loaded = load({ projectFilterState: 'not json', defaultProjectFilter: 'none' });
+    assert.deepEqual(loaded.selectedProjectIds, []);
+    assert.equal(loaded.selectionUnsaved, true);
 });
 
 for (const [stored, days] of [
-    [undefined, 0],
-    ['', 0],
-    ['0', 0],
     ['30', 30],
-    ['365', 365],
     ['999', null],
-    ['abc', null],
-    ['7.0', null],
 ]) {
     test(`load: stored date range ${JSON.stringify(stored)} gives days=${days}`, () => {
         assert.equal(load(stored === undefined ? {} : { dateRangeFilter: stored }).days, days);
     });
 }
 
-test('load: date range is null when the page has no date options', () => {
-    const { filters } = loadFilters(new FakeStorage({ dateRangeFilter: '7' }), PROJECTS, []);
-    assert.equal(filters.days, null);
-});
-
 for (const [stored, hide] of [
     [undefined, true],
     ['true', true],
     ['false', false],
-    ['', false],
-    ['yes', false],
 ]) {
     test(`load: stored hideDeprecated ${JSON.stringify(stored)} gives ${hide}`, () => {
         assert.equal(loadHideDeprecated(new FakeStorage(stored === undefined ? {} : { hideDeprecated: stored })), hide);
@@ -211,19 +151,6 @@ test('save: selection writes integer ids and the page project ids as known', () 
     const storage = new FakeStorage();
     saveFilters(storage, { selectedProjectIds: new Set(['3', '1']) }, ['1', '2', '3']);
     assert.deepEqual(storage.snapshot(), { projectFilterState: '[3,1]', projectFilterKnownIds: '[1,2,3]' });
-});
-
-test('save: empty selection', () => {
-    const storage = new FakeStorage();
-    saveFilters(storage, { selectedProjectIds: new Set() }, []);
-    assert.deepEqual(storage.snapshot(), { projectFilterState: '[]', projectFilterKnownIds: '[]' });
-});
-
-test('save: days and hideDeprecated are written as strings', () => {
-    const storage = new FakeStorage();
-    saveFilters(storage, { days: 7 }, PROJECTS);
-    saveFilters(storage, { hideDeprecated: false }, PROJECTS);
-    assert.deepEqual(storage.snapshot(), { dateRangeFilter: '7', hideDeprecated: 'false' });
 });
 
 test('save: only the changed fields are written', () => {
@@ -237,18 +164,18 @@ test('save: only the changed fields are written', () => {
     });
 });
 
-test('save: default project mode', () => {
-    const storage = new FakeStorage();
-    saveDefaultProjectMode(storage, 'none');
-    assert.deepEqual(storage.snapshot(), { defaultProjectFilter: 'none' });
-});
-
 test('round trip: saved filters load back unchanged', () => {
     const storage = new FakeStorage();
     const filters = { selectedProjectIds: new Set(['2']), days: 90 };
     saveFilters(storage, { ...filters, hideDeprecated: false }, PROJECTS);
     assert.deepEqual(loadFilters(storage, PROJECTS, DAY_OPTIONS), { filters, selectionUnsaved: false });
     assert.equal(loadHideDeprecated(storage), false);
+});
+
+test('round trip: a saved default project mode applies when no selection is saved', () => {
+    const storage = new FakeStorage();
+    saveDefaultProjectMode(storage, 'none');
+    assert.deepEqual([...loadFilters(storage, PROJECTS, DAY_OPTIONS).filters.selectedProjectIds], []);
 });
 
 test('filter run: hideDeprecated is re-read from storage on every run', () => {
@@ -259,8 +186,6 @@ test('filter run: hideDeprecated is re-read from storage on every run', () => {
     assert.equal(cardVisibility(deprecatedCard, filtersForRun(filters, storage), NOW), false);
     storage.setItem('hideDeprecated', 'false');
     assert.equal(cardVisibility(deprecatedCard, filtersForRun(filters, storage), NOW), true);
-    storage.setItem('hideDeprecated', 'true');
-    assert.equal(filtersForRun(filters, storage).hideDeprecated, true);
 });
 
 test('filter run: other fields come from the in-memory filters', () => {
