@@ -4,9 +4,11 @@ import itertools
 import json
 import logging
 import uuid
+from datetime import datetime
 
 import pytest
 
+from src.app import POPOUT_TICKET_STATUS_ORDER
 from src.app import app
 from src.database_orm import Project
 from src.database_orm import Ticket
@@ -14,10 +16,10 @@ from src.db import get_session
 from src.ticket_status import STATUS_LABELS
 from src.ticket_status import STATUS_ORDER
 from src.ticket_status import TicketStatus
-from src.ticket_status import change_status
 from src.ticket_status import parse_status
 
 ALL_MOVES = list(itertools.product(STATUS_ORDER, repeat=2))
+SEEDED_LAST_MODIFIED = datetime(2000, 1, 1)
 
 
 @pytest.fixture
@@ -29,7 +31,7 @@ def client(temp_db):
 
 def _create_ticket(status: str) -> tuple[int, int]:
     with get_session() as session:
-        project = Project(name=f"Project {uuid.uuid4()}", description="d")
+        project = Project(name=f"Project {uuid.uuid4()}", description="d", last_modified=SEEDED_LAST_MODIFIED)
         session.add(project)
         session.flush()
         ticket = Ticket(ticket_id=str(uuid.uuid4())[:8], title="T", project_id=project.id, status=status)
@@ -59,6 +61,16 @@ def test_status_values_and_labels_are_unchanged():
     }
 
 
+def test_popout_status_order_is_unchanged():
+    assert [str(s) for s in POPOUT_TICKET_STATUS_ORDER] == [
+        "todo",
+        "in_progress",
+        "proposed",
+        "done",
+        "wont_do",
+    ]
+
+
 @pytest.mark.parametrize("value", ["proposed", "todo", "in_progress", "done", "wont_do"])
 def test_parse_status_accepts_known_values(value):
     assert parse_status(value) == value
@@ -71,16 +83,8 @@ def test_parse_status_rejects_unknown_values(value):
 
 
 @pytest.mark.parametrize("old,new", ALL_MOVES)
-def test_change_status_allows_every_move(old, new):
-    ticket = Ticket(title="T", project_id=1, status=old)
-    assert change_status(ticket, new) == old
-    assert ticket.status == new
-
-
-@pytest.mark.parametrize("old,new", ALL_MOVES)
 def test_patch_status_stores_plain_string_and_leaves_project_untouched(client, caplog, old, new):
     project_id, ticket_id = _create_ticket(old)
-    last_modified_before = _project_last_modified(project_id)
 
     with caplog.at_level(logging.INFO, logger="src.app"):
         response = client.patch(
@@ -93,7 +97,7 @@ def test_patch_status_stores_plain_string_and_leaves_project_untouched(client, c
     assert response.get_json() == {"status": "updated"}
     assert _stored_status(ticket_id) == str(new)
     assert type(_stored_status(ticket_id)) is str
-    assert _project_last_modified(project_id) == last_modified_before
+    assert _project_last_modified(project_id) == SEEDED_LAST_MODIFIED
     assert f"Ticket T: {old} → {new}" in caplog.text
     assert client.get(f"/api/tickets/{ticket_id}").get_json()["status"] == str(new)
 
@@ -109,7 +113,6 @@ def test_patch_status_stores_plain_string_and_leaves_project_untouched(client, c
 )
 def test_put_status_stores_plain_string_and_leaves_project_untouched(client, old, new):
     project_id, ticket_id = _create_ticket(old)
-    last_modified_before = _project_last_modified(project_id)
 
     response = client.put(
         f"/api/tickets/{ticket_id}",
@@ -119,7 +122,7 @@ def test_put_status_stores_plain_string_and_leaves_project_untouched(client, old
 
     assert response.status_code == 200
     assert _stored_status(ticket_id) == str(new)
-    assert _project_last_modified(project_id) == last_modified_before
+    assert _project_last_modified(project_id) == SEEDED_LAST_MODIFIED
 
 
 @pytest.mark.parametrize("method,path", [("patch", "/api/tickets/{id}/status"), ("put", "/api/tickets/{id}")])

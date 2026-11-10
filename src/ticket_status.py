@@ -35,10 +35,7 @@ def parse_status(value: object) -> TicketStatus | None:
 
 
 def change_status(ticket: "Ticket", new_status: TicketStatus) -> str:
-    """Move a ticket to any status and return the status it had before.
-
-    Every move is allowed, including to the current status, and no move has side effects.
-    """
+    """Move a ticket to any status and return the status it had before."""
     old_status = ticket.status
     ticket.status = new_status
     return old_status
