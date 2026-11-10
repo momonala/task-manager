@@ -1,8 +1,8 @@
 """Tests for dataclasses in datamodels.py."""
 
-from src import config
 from src.datamodels import ProjectData
 from src.datamodels import TicketData
+from src.ticket_status import TicketStatus
 
 
 def test_ticket_data():
@@ -11,18 +11,18 @@ def test_ticket_data():
         title="Test Ticket",
         project_id=1,
         description="Test description",
-        status=config.STATUS_TODO,
+        status=TicketStatus.TODO,
     )
     assert ticket.title == "Test Ticket"
     assert ticket.project_id == 1
-    assert ticket.status == config.STATUS_TODO
+    assert ticket.status == TicketStatus.TODO
 
 
 def test_ticket_data_defaults():
     """Test TicketData with default values."""
     ticket = TicketData(title="Test", project_id=1)
     assert ticket.description is None
-    assert ticket.status == config.STATUS_TODO
+    assert ticket.status == TicketStatus.TODO
 
 
 def test_project_data():

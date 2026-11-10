@@ -55,7 +55,8 @@ task-manager/
 │   ├── config.py              # Non-secret config from pyproject.toml [tool.config]
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
 │   ├── datamodels.py          # Data transfer objects
-│   └── db.py                  # Database connection utilities
+│   ├── db.py                  # Database connection utilities
+│   └── ticket_status.py       # TicketStatus enum, labels, status transitions
 ├── alembic/                   # Database migrations
 │   ├── env.py                 # Migration environment
 │   ├── script.py.mako         # Migration template

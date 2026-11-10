@@ -17,29 +17,6 @@ DATABASE_PATH = DATA_DIR / _tool_config["database_filename"]
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 FLASK_PORT = _tool_config["flask_port"]
 
-STATUS_PROPOSED = "proposed"
-STATUS_TODO = "todo"
-STATUS_IN_PROGRESS = "in_progress"
-STATUS_DONE = "done"
-STATUS_WONT_DO = "wont_do"
-
-STATUS_ORDER = (
-    STATUS_PROPOSED,
-    STATUS_TODO,
-    STATUS_IN_PROGRESS,
-    STATUS_DONE,
-    STATUS_WONT_DO,
-)
-VALID_STATUSES = frozenset(STATUS_ORDER)
-
-STATUS_LABELS = {
-    STATUS_PROPOSED: "Proposed",
-    STATUS_TODO: "To Do",
-    STATUS_IN_PROGRESS: "In Progress",
-    STATUS_DONE: "Done",
-    STATUS_WONT_DO: "Won't Do",
-}
-
 DEBUG = False
 
 

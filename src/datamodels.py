@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from src import config
+from src.ticket_status import TicketStatus
 
 
 @dataclass
@@ -12,7 +12,7 @@ class TicketData:
     title: str
     project_id: int
     description: str | None = None
-    status: str = config.STATUS_TODO
+    status: str = TicketStatus.TODO
 
 
 @dataclass

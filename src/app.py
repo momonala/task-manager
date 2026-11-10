@@ -15,6 +15,11 @@ from src import config
 from src.database_orm import Project
 from src.database_orm import Ticket
 from src.db import get_session
+from src.ticket_status import STATUS_LABELS
+from src.ticket_status import STATUS_ORDER
+from src.ticket_status import TicketStatus
+from src.ticket_status import change_status
+from src.ticket_status import parse_status
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
@@ -49,11 +54,11 @@ def get_project_color(project_id: int) -> str:
 
 
 POPOUT_TICKET_STATUS_ORDER = (
-    config.STATUS_TODO,
-    config.STATUS_IN_PROGRESS,
-    config.STATUS_PROPOSED,
-    config.STATUS_DONE,
-    config.STATUS_WONT_DO,
+    TicketStatus.TODO,
+    TicketStatus.IN_PROGRESS,
+    TicketStatus.PROPOSED,
+    TicketStatus.DONE,
+    TicketStatus.WONT_DO,
 )
 _POPOUT_STATUS_RANK = {status: index for index, status in enumerate(POPOUT_TICKET_STATUS_ORDER)}
 
@@ -101,21 +106,15 @@ def _build_board_context(session) -> dict:
     deprecated_project_ids = {project.id for project in projects if project.deprecated}
 
     # Group tickets by status
-    columns = {
-        config.STATUS_PROPOSED: [],
-        config.STATUS_TODO: [],
-        config.STATUS_IN_PROGRESS: [],
-        config.STATUS_DONE: [],
-        config.STATUS_WONT_DO: [],
-    }
+    columns = {status: [] for status in STATUS_ORDER}
     for ticket in tickets:
         columns[ticket.status].append(ticket)
 
     return {
         "projects": projects,
         "columns": columns,
-        "status_labels": config.STATUS_LABELS,
-        "statuses": config.STATUS_ORDER,
+        "status_labels": STATUS_LABELS,
+        "statuses": STATUS_ORDER,
         "project_colors": project_colors,
         "deprecated_project_ids": deprecated_project_ids,
     }
@@ -244,10 +243,10 @@ def update_ticket(ticket_id: int):
                 return jsonify({"error": "Project not found"}), 404
             ticket.project_id = data["project_id"]
         if "status" in data:
-            new_status = data["status"]
-            if new_status not in config.VALID_STATUSES:
-                return jsonify({"error": f"Invalid status: {new_status}"}), 400
-            ticket.status = new_status
+            new_status = parse_status(data["status"])
+            if new_status is None:
+                return jsonify({"error": f"Invalid status: {data['status']}"}), 400
+            change_status(ticket, new_status)
         logger.info("📝 Updated ticket: %s", ticket.title)
         return jsonify({"status": "updated"})
 
@@ -259,24 +258,16 @@ def update_ticket_status(ticket_id: int):
     if not data or "status" not in data:
         return jsonify({"error": "Status is required"}), 400
 
-    new_status = data["status"]
-    if new_status not in config.VALID_STATUSES:
-        return jsonify({"error": f"Invalid status: {new_status}"}), 400
+    new_status = parse_status(data["status"])
+    if new_status is None:
+        return jsonify({"error": f"Invalid status: {data['status']}"}), 400
 
     with get_session() as session:
         ticket = session.get(Ticket, ticket_id)
         if not ticket:
             return jsonify({"error": "Ticket not found"}), 404
 
-        old_status = ticket.status
-        ticket.status = new_status
-
-        # Update project's last_modified if ticket is marked done
-        if new_status == config.STATUS_DONE and old_status != config.STATUS_DONE:
-            # The onupdate trigger on project.last_modified will handle this
-            # when we access it, but we can also explicitly touch the project
-            pass
-
+        old_status = change_status(ticket, new_status)
         logger.info("🔄 Ticket %s: %s → %s", ticket.title, old_status, new_status)
         return jsonify({"status": "updated"})
 

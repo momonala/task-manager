@@ -12,6 +12,8 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
+from src.ticket_status import TicketStatus
+
 
 class Base(DeclarativeBase):
     """Base class for all models."""
@@ -53,7 +55,7 @@ class Ticket(Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
-    status: Mapped[str] = mapped_column(String(50), default="todo")
+    status: Mapped[str] = mapped_column(String(50), default=TicketStatus.TODO)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),

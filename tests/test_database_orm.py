@@ -5,10 +5,10 @@ import uuid
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from src.config import STATUS_TODO
 from src.database_orm import Project
 from src.database_orm import Ticket
 from src.db import get_session
+from src.ticket_status import TicketStatus
 
 
 def _create_project(session, name="Test Project", description="Test"):
@@ -54,7 +54,7 @@ def test_ticket_creation(temp_db):
         ticket = _create_ticket(session, project.id, description="A test ticket")
         assert ticket.id is not None
         assert ticket.title == "Test Ticket"
-        assert ticket.status == STATUS_TODO
+        assert ticket.status == TicketStatus.TODO
         assert ticket.project_id == project.id
 
 
