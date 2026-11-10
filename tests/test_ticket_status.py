@@ -9,6 +9,7 @@ import pytest
 
 from src.app import POPOUT_TICKET_STATUS_ORDER
 from src.app import app
+from src.app import serialize_projects_ticket_data
 from src.database_orm import Project
 from src.database_orm import Ticket
 from src.db import get_session
@@ -68,6 +69,27 @@ def test_popout_status_order_is_unchanged():
         "done",
         "wont_do",
     ]
+
+
+def test_popout_tickets_sort_by_status_then_most_recently_updated():
+    def ticket(title, status, day):
+        return Ticket(id=day, ticket_id=title, title=title, status=status, updated_at=datetime(2024, 1, day))
+
+    project = Project(
+        id=1,
+        name="P",
+        tickets=[
+            ticket("done", TicketStatus.DONE, 5),
+            ticket("old todo", TicketStatus.TODO, 1),
+            ticket("proposed", TicketStatus.PROPOSED, 6),
+            ticket("new todo", TicketStatus.TODO, 2),
+            ticket("in progress", TicketStatus.IN_PROGRESS, 3),
+        ],
+    )
+
+    titles = [t["title"] for t in serialize_projects_ticket_data([project])["1"]["tickets"]]
+
+    assert titles == ["new todo", "old todo", "in progress", "proposed", "done"]
 
 
 @pytest.mark.parametrize("value", ["Done", None])
