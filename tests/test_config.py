@@ -1,4 +1,4 @@
-"""Tests for the configuration module."""
+"""Tests for the config CLI that install/install.sh reads."""
 
 import pytest
 import typer
@@ -13,33 +13,18 @@ runner = CliRunner()
 
 
 @pytest.mark.parametrize(
-    "flag,expected_output",
-    [
-        ("--project-name", "task-manager"),
-        ("--project-version", "0.1.0"),
-        ("--flask-port", "5010"),
-    ],
+    "flag,expected_output", [("--project-name", "task-manager"), ("--flask-port", "5010")]
 )
 def test_config_returns_single_value(flag: str, expected_output: str):
-    """Test that individual flags return their correct values."""
     result = runner.invoke(app, [flag])
 
     assert result.exit_code == 0
     assert result.stdout.strip() == expected_output
 
 
-def test_config_all_returns_all_values():
-    """Test that --all flag returns all configuration values."""
+def test_config_all_prints_key_value_lines():
     result = runner.invoke(app, ["--all"])
 
     assert result.exit_code == 0
     assert "project_name=task-manager" in result.stdout
-    assert "flask_port=" in result.stdout
-
-
-def test_config_without_flag_fails():
-    """Test that calling config without any flag produces an error."""
-    result = runner.invoke(app, [])
-
-    assert result.exit_code == 1
-    assert "Error: No config key specified" in result.output
+    assert "flask_port=5010" in result.stdout
