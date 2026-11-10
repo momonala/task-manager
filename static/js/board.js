@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initColumnCountDigits();
     initSearchClear();
 
-    setChecked('toggle-hide-deprecated', cardFilters.hideDeprecated);
+    setChecked('toggle-hide-deprecated', loadHideDeprecated(localStorage));
     applyHideDeprecatedToProjects();
 
     const searchInput = document.getElementById('projectSearch');
@@ -1140,12 +1140,13 @@ function saveDefaultSortOrder() {
 // --- Hide Deprecated ---
 
 function toggleHideDeprecated(checked) {
-    updateCardFilters({ hideDeprecated: checked });
+    saveFilters(localStorage, { hideDeprecated: checked }, filterProjectIds());
+    applyAllFilters();
     applyHideDeprecatedToProjects();
 }
 
 function applyHideDeprecatedToProjects() {
-    const hide = filtersForRun(cardFilters, localStorage).hideDeprecated;
+    const hide = loadHideDeprecated(localStorage);
     document.querySelectorAll('[data-deprecated="true"]').forEach(card => {
         if (card.classList.contains('ticket-card')) return;
         card.classList.toggle('hidden', hide);

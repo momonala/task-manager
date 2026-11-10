@@ -1,8 +1,9 @@
 /**
- * @typedef {Object} CardFilters
+ * @typedef {Object} TabFilters
  * @property {Set<string>} selectedProjectIds
- * @property {boolean} hideDeprecated
  * @property {number | null} days  Null when the stored range matches no date range option.
+ *
+ * @typedef {TabFilters & {hideDeprecated: boolean}} CardFilters
  *
  * @typedef {Object} FilterableCard
  * @property {string} projectId
@@ -38,8 +39,7 @@ function loadHideDeprecated(storage) {
 }
 
 /**
- * The filters to apply now: hideDeprecated is re-read so a change saved by another tab applies here.
- * @param {CardFilters} filters
+ * @param {TabFilters} filters
  * @param {Storage} storage
  * @returns {CardFilters}
  */
@@ -78,7 +78,7 @@ function loadProjectSelection(storage, projectIds) {
  * @param {Storage} storage
  * @param {string[]} projectIds  Values of the project filter checkboxes, in page order.
  * @param {string[]} dayOptions  Values of the date range options.
- * @returns {{filters: CardFilters, selectionUnsaved: boolean}}
+ * @returns {{filters: TabFilters, selectionUnsaved: boolean}}
  */
 function loadFilters(storage, projectIds, dayOptions) {
     const { selectedProjectIds, unsaved } = loadProjectSelection(storage, projectIds);
@@ -86,7 +86,6 @@ function loadFilters(storage, projectIds, dayOptions) {
     return {
         filters: {
             selectedProjectIds,
-            hideDeprecated: loadHideDeprecated(storage),
             days: dayOptions.includes(storedDays) ? parseInt(storedDays) || 0 : null,
         },
         selectionUnsaved: unsaved,
@@ -114,5 +113,5 @@ function saveDefaultProjectMode(storage, mode) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { cardVisibility, filtersForRun, loadFilters, saveFilters, saveDefaultProjectMode, FILTER_STORAGE_KEYS, DAY_MS };
+    module.exports = { cardVisibility, filtersForRun, loadHideDeprecated, loadFilters, saveFilters, saveDefaultProjectMode, FILTER_STORAGE_KEYS, DAY_MS };
 }

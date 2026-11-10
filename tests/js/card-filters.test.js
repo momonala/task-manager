@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const { cardVisibility, filtersForRun, loadFilters, saveFilters, saveDefaultProjectMode, DAY_MS } = require(
+const { cardVisibility, filtersForRun, loadHideDeprecated, loadFilters, saveFilters, saveDefaultProjectMode, DAY_MS } = require(
     path.join(__dirname, '../../static/js/card-filters.js'),
 );
 
@@ -96,10 +96,9 @@ function load(entries, projectIds = PROJECTS) {
     return { ...filters, selectedProjectIds: [...filters.selectedProjectIds], selectionUnsaved };
 }
 
-test('load: empty storage selects every project, hides deprecated, shows all dates', () => {
+test('load: empty storage selects every project and shows all dates', () => {
     assert.deepEqual(load({}), {
         selectedProjectIds: ['1', '2', '3'],
-        hideDeprecated: true,
         days: 0,
         selectionUnsaved: true,
     });
@@ -204,7 +203,7 @@ for (const [stored, hide] of [
     ['yes', false],
 ]) {
     test(`load: stored hideDeprecated ${JSON.stringify(stored)} gives ${hide}`, () => {
-        assert.equal(load(stored === undefined ? {} : { hideDeprecated: stored }).hideDeprecated, hide);
+        assert.equal(loadHideDeprecated(new FakeStorage(stored === undefined ? {} : { hideDeprecated: stored })), hide);
     });
 }
 
@@ -246,10 +245,10 @@ test('save: default project mode', () => {
 
 test('round trip: saved filters load back unchanged', () => {
     const storage = new FakeStorage();
-    const filters = { selectedProjectIds: new Set(['2']), hideDeprecated: false, days: 90 };
-    saveFilters(storage, filters, PROJECTS);
-    const loaded = loadFilters(storage, PROJECTS, DAY_OPTIONS);
-    assert.deepEqual(loaded, { filters, selectionUnsaved: false });
+    const filters = { selectedProjectIds: new Set(['2']), days: 90 };
+    saveFilters(storage, { ...filters, hideDeprecated: false }, PROJECTS);
+    assert.deepEqual(loadFilters(storage, PROJECTS, DAY_OPTIONS), { filters, selectionUnsaved: false });
+    assert.equal(loadHideDeprecated(storage), false);
 });
 
 test('filter run: hideDeprecated is re-read from storage on every run', () => {
@@ -266,7 +265,7 @@ test('filter run: hideDeprecated is re-read from storage on every run', () => {
 
 test('filter run: other fields come from the in-memory filters', () => {
     const storage = new FakeStorage({ projectFilterState: '[2]', dateRangeFilter: '30' });
-    const filters = { selectedProjectIds: new Set(['1']), hideDeprecated: true, days: 7 };
+    const filters = { selectedProjectIds: new Set(['1']), days: 7 };
     const run = filtersForRun(filters, storage);
     assert.deepEqual([...run.selectedProjectIds], ['1']);
     assert.equal(run.days, 7);
