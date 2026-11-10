@@ -73,6 +73,7 @@ def test_view_routes(client, route, expected_content):
     "data,expected_status",
     [
         ({"name": "Project", "description": "Desc"}, HTTP_CREATED),
+        ({"description": "Desc"}, HTTP_BAD_REQUEST),
         ({"name": "Project"}, HTTP_BAD_REQUEST),
         ({}, HTTP_BAD_REQUEST),
     ],
