@@ -30,7 +30,7 @@ Create a Flask-based task management application with the following specificatio
 - name: String(100), NOT NULL, unique
 - description: Text, NOT NULL
 - localpath: String(500), NOT NULL
-- last_modified: DateTime, auto-updated when any ticket in this project is marked as done
+- last_modified: DateTime, auto-updated when the project row itself is edited
 ```
 
 ## UI Requirements
