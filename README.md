@@ -71,12 +71,14 @@ task-manager/
 ├── static/                    # Static assets
 │   ├── css/style.css          # Custom styles
 │   ├── js/board.js            # Drag-and-drop & interactions
+│   ├── js/card-filters.js     # Card visibility and filter persistence (pure, node-tested)
 │   └── kids-cheering.mp3      # Celebration audio
 ├── tests/                     # Test suite
 │   ├── conftest.py            # Test fixtures
 │   ├── test_app.py            # Flask app tests (17 tests)
 │   ├── test_database_orm.py   # ORM model tests (9 tests)
-│   └── test_datamodels.py     # Data model tests
+│   ├── test_datamodels.py     # Data model tests
+│   └── js/                    # node --test suites for static/js
 ├── install/                   # Deployment to a linux server (raspberry pi)
 │   ├── install.sh             # Automated installation script
 │   └── projects_task-manager.service          # Flask app systemd service

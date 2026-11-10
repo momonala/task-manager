@@ -109,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initColumnCountDigits();
     initSearchClear();
 
-    setChecked('toggle-hide-deprecated', loadHideDeprecatedSetting());
     applyHideDeprecatedToProjects();
 
     const searchInput = document.getElementById('projectSearch');
@@ -304,14 +303,6 @@ function setDigitGroup(group, str) {
 
 // --- Project Filtering ---
 
-function getSelectedProjectIds() {
-    const selected = new Set();
-    document.querySelectorAll('.project-filter-checkbox').forEach(cb => {
-        if (cb.checked) selected.add(cb.value);
-    });
-    return selected;
-}
-
 function filterProjectsBySearch(searchTerm) {
     const searchLower = searchTerm.toLowerCase().trim();
     const clearBtn = document.getElementById('clearSearchBtn');
@@ -472,35 +463,65 @@ function initSearchClear() {
     window._clearProjectSearchWithAnimation = clearWithAnimation;
 }
 
-function selectAllProjects() {
-    document.querySelectorAll('.project-filter-checkbox').forEach(cb => { cb.checked = true; });
-    updateProjectFilter();
+let cardFilters = null;
+
+function filterProjectIds() {
+    return Array.from(document.querySelectorAll('.project-filter-checkbox'), cb => cb.value);
 }
 
-function selectNoneProjects() {
-    document.querySelectorAll('.project-filter-checkbox').forEach(cb => { cb.checked = false; });
-    updateProjectFilter();
+function loadCardFilters() {
+    const dateRangeSelect = document.getElementById('dateRangeFilter');
+    const dayOptions = dateRangeSelect ? Array.from(dateRangeSelect.options, option => option.value) : [];
+    const projectIds = filterProjectIds();
+    const { filters, selectionUnsaved } = loadFilters(localStorage, projectIds, dayOptions);
+    cardFilters = filters;
+    if (selectionUnsaved) saveFilters(localStorage, { selectedProjectIds: filters.selectedProjectIds }, projectIds);
+    renderFilterControls();
 }
 
-function updateProjectFilter() {
-    saveProjectFilterState(getSelectedProjectIds());
+function updateCardFilters(changes) {
+    cardFilters = { ...cardFilters, ...changes };
+    saveFilters(localStorage, changes, filterProjectIds());
+    renderFilterControls();
     applyAllFilters();
 }
 
-function applyAllFilters() {
-    const selectedProjects = getSelectedProjectIds();
+function renderFilterControls() {
+    document.querySelectorAll('.project-filter-checkbox').forEach(cb => {
+        cb.checked = cardFilters.selectedProjectIds.has(cb.value);
+    });
     const dateRangeSelect = document.getElementById('dateRangeFilter');
-    const days = dateRangeSelect ? parseInt(dateRangeSelect.value) || 0 : 0;
-    const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : null;
-    const hideDeprecated = loadHideDeprecatedSetting();
+    if (dateRangeSelect) dateRangeSelect.value = cardFilters.days === null ? '' : String(cardFilters.days);
+    setChecked('toggle-hide-deprecated', cardFilters.hideDeprecated);
+}
 
+function selectAllProjects() {
+    updateCardFilters({ selectedProjectIds: new Set(filterProjectIds()) });
+}
+
+function selectNoneProjects() {
+    updateCardFilters({ selectedProjectIds: new Set() });
+}
+
+function updateProjectFilter() {
+    const checked = Array.from(document.querySelectorAll('.project-filter-checkbox'))
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    updateCardFilters({ selectedProjectIds: new Set(checked) });
+}
+
+function cardFromElement(card) {
+    return {
+        projectId: card.dataset.projectId,
+        deprecated: card.dataset.deprecated === 'true',
+        createdAtSeconds: parseFloat(card.dataset.timestamp || 0),
+    };
+}
+
+function applyAllFilters() {
+    const now = Date.now();
     document.querySelectorAll('.ticket-card').forEach(card => {
-        const projectId = card.dataset.projectId;
-        const isDeprecated = card.dataset.deprecated === 'true';
-        const ticketDate = new Date(parseFloat(card.dataset.timestamp || 0) * 1000);
-        const dateOk = !cutoffDate || ticketDate >= cutoffDate;
-        const visible = isDeprecated ? (!hideDeprecated && dateOk) : (selectedProjects.has(projectId) && dateOk);
-        card.classList.toggle('hidden-by-filter', !visible);
+        card.classList.toggle('hidden-by-filter', !cardVisibility(cardFromElement(card), cardFilters, now));
     });
 
     updateColumnCounts();
@@ -509,10 +530,7 @@ function applyAllFilters() {
 
 function applyDateRangeFilter() {
     const dateRangeSelect = document.getElementById('dateRangeFilter');
-    if (dateRangeSelect) {
-        localStorage.setItem('dateRangeFilter', (parseInt(dateRangeSelect.value) || 0).toString());
-        applyAllFilters();
-    }
+    if (dateRangeSelect) updateCardFilters({ days: parseInt(dateRangeSelect.value) || 0 });
 }
 
 // --- Sorting ---
@@ -1087,44 +1105,8 @@ function updateGridLayout() {
 
 // --- Default Filter Preferences ---
 
-function saveProjectFilterState(selectedProjects) {
-    const projectIds = Array.from(selectedProjects).map(id => parseInt(id));
-    localStorage.setItem('projectFilterState', JSON.stringify(projectIds));
-    const allIds = Array.from(document.querySelectorAll('.project-filter-checkbox')).map(cb => parseInt(cb.value));
-    localStorage.setItem('projectFilterKnownIds', JSON.stringify(allIds));
-}
-
-function loadProjectFilterState() {
-    const saved = localStorage.getItem('projectFilterState');
-    if (!saved) return false;
-
-    try {
-        const projectIdSet = new Set(JSON.parse(saved).map(id => String(id)));
-        const savedKnownIds = localStorage.getItem('projectFilterKnownIds');
-        const knownIdSet = new Set(savedKnownIds ? JSON.parse(savedKnownIds).map(id => String(id)) : projectIdSet);
-
-        let hasNewProject = false;
-        document.querySelectorAll('.project-filter-checkbox').forEach(checkbox => {
-            if (knownIdSet.has(checkbox.value)) {
-                checkbox.checked = projectIdSet.has(checkbox.value);
-            } else {
-                // Project wasn't known when filter state was last saved (e.g. newly created) — default to visible.
-                checkbox.checked = true;
-                hasNewProject = true;
-            }
-        });
-        if (hasNewProject) {
-            saveProjectFilterState(getSelectedProjectIds());
-        }
-        return true;
-    } catch (e) {
-        console.error('Error loading project filter state:', e);
-        return false;
-    }
-}
-
 function setDefaultProjectFilter(mode) {
-    localStorage.setItem('defaultProjectFilter', mode);
+    saveDefaultProjectMode(localStorage, mode);
     if (mode === 'all') selectAllProjects();
     else if (mode === 'none') selectNoneProjects();
 }
@@ -1138,20 +1120,7 @@ function loadDefaultFilterPreferences() {
     if (sortSelect) sortSelect.value = defaultValue;
     if (defaultSortSelect) defaultSortSelect.value = defaultValue;
 
-    const savedDateRange = localStorage.getItem('dateRangeFilter');
-    const dateRangeSelect = document.getElementById('dateRangeFilter');
-    if (dateRangeSelect) dateRangeSelect.value = savedDateRange || '0';
-
-    const defaultFilter = localStorage.getItem('defaultProjectFilter');
-    if (defaultFilter) {
-        if (!loadProjectFilterState()) {
-            if (defaultFilter === 'all') selectAllProjects();
-            else if (defaultFilter === 'none') selectNoneProjects();
-        }
-    } else {
-        if (!loadProjectFilterState()) selectAllProjects();
-    }
-
+    loadCardFilters();
     applyAllFilters();
 }
 
@@ -1169,19 +1138,13 @@ function saveDefaultSortOrder() {
 
 // --- Hide Deprecated ---
 
-function loadHideDeprecatedSetting() {
-    const saved = localStorage.getItem('hideDeprecated');
-    return saved === null ? true : saved === 'true';
-}
-
 function toggleHideDeprecated(checked) {
-    localStorage.setItem('hideDeprecated', checked.toString());
-    applyAllFilters();
+    updateCardFilters({ hideDeprecated: checked });
     applyHideDeprecatedToProjects();
 }
 
 function applyHideDeprecatedToProjects() {
-    const hide = loadHideDeprecatedSetting();
+    const hide = cardFilters.hideDeprecated;
     document.querySelectorAll('[data-deprecated="true"]').forEach(card => {
         if (card.classList.contains('ticket-card')) return;
         card.classList.toggle('hidden', hide);
