@@ -54,7 +54,6 @@ task-manager/
 │   ├── app.py                 # Flask application entry point
 │   ├── config.py              # Non-secret config from pyproject.toml [tool.config]
 │   ├── database_orm.py        # SQLAlchemy 2.0 models
-│   ├── datamodels.py          # Data transfer objects
 │   ├── db.py                  # Database connection utilities
 │   └── ticket_status.py       # TicketStatus enum, labels, status transitions
 ├── alembic/                   # Database migrations
@@ -75,9 +74,9 @@ task-manager/
 │   └── kids-cheering.mp3      # Celebration audio
 ├── tests/                     # Test suite
 │   ├── conftest.py            # Test fixtures
-│   ├── test_app.py            # Flask app tests (17 tests)
-│   ├── test_database_orm.py   # ORM model tests (9 tests)
-│   ├── test_datamodels.py     # Data model tests
+│   ├── test_app.py            # Flask routes and API
+│   ├── test_config.py         # pyproject.toml config loading
+│   ├── test_ticket_status.py  # Status enum and transitions
 │   └── js/                    # node --test suites for static/js
 ├── install/                   # Deployment to a linux server (raspberry pi)
 │   ├── install.sh             # Automated installation script
