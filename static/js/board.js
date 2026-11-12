@@ -620,7 +620,7 @@ async function editTicket(ticketId) {
         // open in markdown preview mode by default
         if (descValue.trim()) {
             const preview = document.getElementById('descPreview');
-            preview.innerHTML = marked.parse(descValue);
+            preview.innerHTML = DOMPurify.sanitize(marked.parse(descValue));
             preview.classList.remove('hidden');
             textarea.classList.add('hidden');
             document.getElementById('descToggleLabel').textContent = 'Edit';
@@ -663,7 +663,7 @@ function toggleDescriptionPreview() {
     const label = document.getElementById('descToggleLabel');
     const isEditing = !textarea.classList.contains('hidden');
     if (isEditing) {
-        preview.innerHTML = marked.parse(textarea.value || '');
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(textarea.value || ''));
         preview.classList.remove('hidden');
         textarea.classList.add('hidden');
         swapTextLabel(label, 'Edit');
